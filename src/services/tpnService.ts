@@ -8,9 +8,10 @@ export interface TPNCalculationInputs {
   weight: number;
   weightUnit: 'kg' | 'g';
   totalFluidPerDay: number;
-  oralVolume: number;
-  oralFrequency: number;
-  oralType: 'ASI' | 'Sufor';
+  asiVolume: number;
+  asiFrequency: number;
+  suforVolume: number;
+  suforFrequency: number;
   medsVolume: number;
   medsFrequency: number;
   aminoDose: number;
@@ -37,14 +38,18 @@ export const calculateWeightInKg = (weight: number, unit: 'kg' | 'g'): number =>
 };
 
 export const calculateOralAndMeds = (
-  oralVol: number, 
-  oralFreq: number, 
+  asiVol: number,
+  asiFreq: number,
+  suforVol: number,
+  suforFreq: number,
   medsVol: number, 
   medsFreq: number
 ) => {
-  const totalOral = oralFreq > 0 ? (24 / oralFreq) * oralVol : 0;
+  const totalAsiOral = asiFreq > 0 ? (24 / asiFreq) * asiVol : 0;
+  const totalSuforOral = suforFreq > 0 ? (24 / suforFreq) * suforVol : 0;
+  const totalOral = totalAsiOral + totalSuforOral;
   const totalMeds = medsFreq * medsVol;
-  return { totalOral, totalMeds };
+  return { totalAsiOral, totalSuforOral, totalOral, totalMeds };
 };
 
 export const calculateAminoVolume = (
@@ -89,8 +94,8 @@ export const calculateCalories = (
   aminoDoseVal: number,
   lipidDoseVal: number,
   weightInKg: number,
-  totalOral: number,
-  oralType: 'ASI' | 'Sufor'
+  totalAsiOral: number,
+  totalSuforOral: number
 ) => {
   // Parenteral Dextrose Calories (3.4 kcal/g)
   const totalDextroseGrams = (finalBaseFluid * 0.05) + (finalD40 * 0.4);
@@ -105,8 +110,7 @@ export const calculateCalories = (
   const parenteralKcal = dextroseKcal + aminoKcal + lipidKcal;
   
   // Oral Calories (ASI: 0.67, Sufor: 1.0)
-  const oralKcalPerMl = oralType === 'ASI' ? 0.67 : 1.0;
-  const oralKcal = totalOral * oralKcalPerMl;
+  const oralKcal = (totalAsiOral * 0.67) + (totalSuforOral * 1.0);
   
   const totalKcal = parenteralKcal + oralKcal;
   const kcalPerKg = weightInKg > 0 ? totalKcal / weightInKg : 0;
@@ -127,9 +131,10 @@ export const calculateTPN = (inputs: TPNCalculationInputs) => {
     weight,
     weightUnit,
     totalFluidPerDay,
-    oralVolume,
-    oralFrequency,
-    oralType,
+    asiVolume,
+    asiFrequency,
+    suforVolume,
+    suforFrequency,
     medsVolume,
     medsFrequency,
     aminoDose,
@@ -146,7 +151,14 @@ export const calculateTPN = (inputs: TPNCalculationInputs) => {
   } = inputs;
 
   const weightInKg = calculateWeightInKg(weight, weightUnit);
-  const { totalOral, totalMeds } = calculateOralAndMeds(oralVolume, oralFrequency, medsVolume, medsFrequency);
+  const { totalAsiOral, totalSuforOral, totalOral, totalMeds } = calculateOralAndMeds(
+    asiVolume,
+    asiFrequency,
+    suforVolume,
+    suforFrequency,
+    medsVolume,
+    medsFrequency
+  );
   
   const aminoVolume = calculateAminoVolume(aminoDose, weightInKg, aminoConcentration);
   const lipidVolume = calculateLipidVolume(lipidDose, weightInKg);
@@ -188,8 +200,8 @@ export const calculateTPN = (inputs: TPNCalculationInputs) => {
   
   const finalBaseFluid = Math.max(0, mainInfusionVolume - finalD40 - finalCa - finalKcl - finalGliko);
 
-  const asiKcalReport = oralType === 'ASI' ? totalOral * ASI_KCAL_MULTIPLIER : 0;
-  const formulaKcalReport = oralType === 'Sufor' ? totalOral * FORMULA_KCAL_MULTIPLIER : 0;
+  const asiKcalReport = totalAsiOral * ASI_KCAL_MULTIPLIER;
+  const formulaKcalReport = totalSuforOral * FORMULA_KCAL_MULTIPLIER;
   const dextroseBaseVolume = finalBaseFluid + finalD40;
   const dextroseKcalReport = (dextroseBaseVolume * (4 * dPercent)) / 100;
   const proteinKcalReport = finalAmino * PROTEIN_KCAL_MULTIPLIER;
@@ -201,8 +213,8 @@ export const calculateTPN = (inputs: TPNCalculationInputs) => {
     aminoDose,
     lipidDose,
     weightInKg,
-    totalOral,
-    oralType
+    totalAsiOral,
+    totalSuforOral
   );
 
   const kebutuhanKaloriTotal = 120 * weightInKg;
@@ -219,6 +231,8 @@ export const calculateTPN = (inputs: TPNCalculationInputs) => {
 
   return {
     weightInKg,
+    totalAsiOral,
+    totalSuforOral,
     totalOral,
     totalMeds,
     mainInfusionVolume,
