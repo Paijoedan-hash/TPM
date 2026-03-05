@@ -132,6 +132,11 @@ export default function App() {
     return calculateTPN(calculationInputs);
   }, [inputs, useSmartRounding]);
 
+  const { soluvitVolumeValue, vitalipidVolumeValue } = useMemo(() => ({
+    soluvitVolumeValue: parseNumericInput(inputs.soluvitVolume),
+    vitalipidVolumeValue: parseNumericInput(inputs.vitalipidVolume),
+  }), [inputs.soluvitVolume, inputs.vitalipidVolume]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     const normalizedValue = value.replace(/,/g, '.');
@@ -722,8 +727,8 @@ export default function App() {
                         <p className="text-amber-400 font-bold mb-2 uppercase tracking-wider">3. INFUS SMOFLIPID 20%</p>
                         <p className="bg-white/5 p-4 rounded-2xl border border-white/10 text-sm md:text-base">
                           Smoflipid 20% <span className="text-white">{(results.finalLipid || 0).toFixed(useSmartRounding ? 0 : 1)} ml</span> + 
-                          Soluvit <span className="text-white">{parseNumericInput(inputs.soluvitVolume).toFixed(useSmartRounding ? 0 : 1)} ml</span> + 
-                          Vitalipid <span className="text-white">{parseNumericInput(inputs.vitalipidVolume).toFixed(useSmartRounding ? 0 : 1)} ml</span> = 
+                          Soluvit <span className="text-white">{soluvitVolumeValue.toFixed(useSmartRounding ? 0 : 1)} ml</span> + 
+                          Vitalipid <span className="text-white">{vitalipidVolumeValue.toFixed(useSmartRounding ? 0 : 1)} ml</span> = 
                           <span className="text-amber-400 font-bold ml-2">{(results.totalLipidInfusion || 0).toFixed(0)} ml/hari ({(results.lipidRatePerHour || 0).toFixed(1)} cc/jam)</span>
                         </p>
                       </div>
