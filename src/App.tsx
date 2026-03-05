@@ -1,0 +1,837 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useState, useMemo, useEffect } from 'react';
+import { 
+  Calculator, 
+  Baby, 
+  Droplets, 
+  Activity, 
+  FlaskConical, 
+  Info,
+  RefreshCcw,
+  Trash2,
+  CheckCircle2,
+  AlertCircle,
+  ClipboardCheck,
+  Zap,
+  PieChart,
+  Scale,
+  BookOpen
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { calculateTPN, TPNCalculationInputs } from './services/tpnService';
+import { MilkReferenceModal } from './components/MilkReferenceModal';
+
+// Types
+interface TPNInputs {
+  weight: string;
+  weightUnit: 'kg' | 'g';
+  totalFluidPerDay: string;
+  // Oral detail
+  oralVolume: string;
+  oralFrequency: string; 
+  oralType: 'ASI' | 'Sufor';
+  // Meds detail
+  medsVolume: string;
+  medsFrequency: string; 
+  // New Nutrition
+  aminoDose: string; // g/kg/day
+  aminoConcentration: 6 | 10;
+  lipidDose: string; // g/kg/day
+  balanceCairan: string; // ml
+  
+  // New Vitamins/Minerals from prescription
+  glikofosfatDose: string; // ml/kg
+  soluvitVolume: string; // ml/day
+  vitalipidVolume: string; // ml/day
+  
+  gir: string;
+  caDose: string; 
+  kclDose: string; 
+  baseFluidType: 'D5 1/4 NS' | 'D5 1/2 NS';
+}
+
+export default function App() {
+  const [isMilkModalOpen, setIsMilkModalOpen] = useState(false);
+  const [inputs, setInputs] = useState<TPNInputs>({
+    weight: '1.5',
+    weightUnit: 'kg',
+    totalFluidPerDay: '150',
+    oralVolume: '2',
+    oralFrequency: '3',
+    oralType: 'ASI',
+    medsVolume: '1',
+    medsFrequency: '2',
+    aminoDose: '2',
+    aminoConcentration: 10,
+    lipidDose: '1',
+    balanceCairan: '',
+    glikofosfatDose: '1',
+    soluvitVolume: '',
+    vitalipidVolume: '',
+    gir: '4',
+    caDose: '2',
+    kclDose: '1',
+    baseFluidType: 'D5 1/4 NS',
+  });
+
+  const [useSmartRounding, setUseSmartRounding] = useState(true);
+
+  // Darrow (Holliday-Segar) Formula
+  const calculateDarrowFluid = (weight: number, unit: 'kg' | 'g') => {
+    const w = unit === 'g' ? weight / 1000 : weight;
+    if (w <= 0) return 0;
+    if (w <= 10) return w * 100;
+    if (w <= 20) return 1000 + (w - 10) * 50;
+    return 1500 + (w - 20) * 20;
+  };
+
+  // Auto-calculate fluid when weight changes
+  useEffect(() => {
+    const w = parseFloat(inputs.weight) || 0;
+    const darrowFluid = calculateDarrowFluid(w, inputs.weightUnit);
+    if (darrowFluid > 0) {
+      setInputs(prev => ({ ...prev, totalFluidPerDay: Math.round(darrowFluid).toString() }));
+    }
+  }, [inputs.weight, inputs.weightUnit]);
+
+  // Calculations
+  const results = useMemo(() => {
+    const calculationInputs: TPNCalculationInputs = {
+      weight: parseFloat(inputs.weight) || 0,
+      weightUnit: inputs.weightUnit,
+      totalFluidPerDay: parseFloat(inputs.totalFluidPerDay) || 0,
+      oralVolume: parseFloat(inputs.oralVolume) || 0,
+      oralFrequency: parseFloat(inputs.oralFrequency) || 0,
+      oralType: inputs.oralType,
+      medsVolume: parseFloat(inputs.medsVolume) || 0,
+      medsFrequency: parseFloat(inputs.medsFrequency) || 0,
+      aminoDose: parseFloat(inputs.aminoDose) || 0,
+      aminoConcentration: inputs.aminoConcentration,
+      lipidDose: parseFloat(inputs.lipidDose) || 0,
+      balanceCairan: parseFloat(inputs.balanceCairan) || 0,
+      glikofosfatDose: parseFloat(inputs.glikofosfatDose) || 0,
+      soluvitVolume: parseFloat(inputs.soluvitVolume) || 0,
+      vitalipidVolume: parseFloat(inputs.vitalipidVolume) || 0,
+      gir: parseFloat(inputs.gir) || 0,
+      caDose: parseFloat(inputs.caDose) || 0,
+      kclDose: parseFloat(inputs.kclDose) || 0,
+      baseFluidType: inputs.baseFluidType,
+      useSmartRounding
+    };
+
+    return calculateTPN(calculationInputs);
+  }, [inputs, useSmartRounding]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setInputs(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const resetInputs = () => {
+    setInputs({
+      weight: '1.5',
+      weightUnit: 'kg',
+      totalFluidPerDay: '150',
+      oralVolume: '2',
+      oralFrequency: '3',
+      oralType: 'ASI',
+      medsVolume: '1',
+      medsFrequency: '2',
+      aminoDose: '2',
+      aminoConcentration: 10,
+      lipidDose: '1',
+      balanceCairan: '',
+      glikofosfatDose: '1',
+      soluvitVolume: '',
+      vitalipidVolume: '',
+      gir: '4',
+      caDose: '2',
+      kclDose: '1',
+      baseFluidType: 'D5 1/4 NS',
+    });
+  };
+
+  const clearInputs = () => {
+    setInputs({
+      weight: '',
+      weightUnit: 'kg',
+      totalFluidPerDay: '',
+      oralVolume: '',
+      oralFrequency: '',
+      oralType: 'ASI',
+      medsVolume: '',
+      medsFrequency: '',
+      aminoDose: '',
+      aminoConcentration: 10,
+      lipidDose: '',
+      balanceCairan: '',
+      glikofosfatDose: '',
+      soluvitVolume: '',
+      vitalipidVolume: '',
+      gir: '',
+      caDose: '',
+      kclDose: '',
+      baseFluidType: 'D5 1/4 NS',
+    });
+  };
+
+  return (
+    <div className="min-h-screen bg-[#f8fafc] text-slate-900 font-sans p-4 md:p-8">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-emerald-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-emerald-200">
+              <Calculator size={32} />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight text-slate-900">NeoTPN Calc <span className="text-emerald-500 text-sm font-medium ml-2">v2.0</span></h1>
+              <p className="text-slate-500 font-medium">Kalkulator Nutrisi & Kalori Neonatus</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3 bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm">
+            <button 
+              onClick={() => setUseSmartRounding(true)}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                useSmartRounding 
+                ? 'bg-emerald-600 text-white shadow-md shadow-emerald-100' 
+                : 'text-slate-500 hover:bg-slate-50'
+              }`}
+            >
+              Smart Rounding
+            </button>
+            <button 
+              onClick={() => setUseSmartRounding(false)}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                !useSmartRounding 
+                ? 'bg-slate-800 text-white shadow-md shadow-slate-200' 
+                : 'text-slate-500 hover:bg-slate-50'
+              }`}
+            >
+              Presisi
+            </button>
+            <div className="w-px h-6 bg-slate-200 mx-1" />
+            <div className="flex items-center gap-1">
+              <button 
+                onClick={resetInputs}
+                className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all"
+                title="Reset ke Default"
+              >
+                <RefreshCcw size={18} />
+              </button>
+              <button 
+                onClick={clearInputs}
+                className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                title="Kosongkan Semua (0)"
+              >
+                <Trash2 size={18} />
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* LEFT COLUMN: INPUTS */}
+          <div className="lg:col-span-5 space-y-6">
+            {/* Patient Info */}
+            <section className="bg-white rounded-[2rem] p-8 shadow-sm border border-slate-200/60">
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
+                  <Baby size={20} />
+                </div>
+                <h2 className="text-lg font-bold text-slate-800">Data Pasien & Cairan</h2>
+              </div>
+              
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Berat Badan</label>
+                  <div className="flex gap-2">
+                    <div className="relative flex-1 group">
+                      <input
+                        type="number"
+                        name="weight"
+                        value={inputs.weight}
+                        onChange={handleInputChange}
+                        step={0.01}
+                        placeholder="0"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-5 py-3.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
+                      />
+                    </div>
+                    <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
+                      {(['kg', 'g'] as const).map(unit => (
+                        <button
+                          key={unit}
+                          onClick={() => setInputs(p => ({ ...p, weightUnit: unit }))}
+                          className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                            inputs.weightUnit === unit 
+                            ? 'bg-white text-emerald-600 shadow-sm' 
+                            : 'text-slate-400 hover:text-slate-600'
+                          }`}
+                        >
+                          {unit}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <InputGroup 
+                    label="Target Cairan Total" 
+                    name="totalFluidPerDay" 
+                    value={inputs.totalFluidPerDay} 
+                    onChange={handleInputChange} 
+                    unit="ml/hari"
+                  />
+                  <div className="absolute top-0 right-0">
+                    <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100 uppercase tracking-tighter">
+                      Darrow
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 pt-2">
+                  <div className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 relative">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Asupan Oral</label>
+                        <button 
+                          onClick={() => setIsMilkModalOpen(true)}
+                          className="text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 p-1 rounded-md transition-colors"
+                          title="Referensi Kalori Susu"
+                        >
+                          <BookOpen size={12} />
+                        </button>
+                      </div>
+                      <div className="flex bg-white p-0.5 rounded-lg border border-slate-200">
+                        {(['ASI', 'Sufor'] as const).map(type => (
+                          <button
+                            key={type}
+                            onClick={() => setInputs(p => ({ ...p, oralType: type }))}
+                            className={`px-2 py-1 rounded-md text-[9px] font-bold transition-all ${
+                              inputs.oralType === type 
+                              ? 'bg-emerald-600 text-white shadow-sm' 
+                              : 'text-slate-400 hover:text-slate-600'
+                            }`}
+                          >
+                            {type}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="number" 
+                        name="oralVolume" 
+                        value={inputs.oralVolume} 
+                        onChange={handleInputChange}
+                        placeholder="0"
+                        className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-sm font-bold focus:ring-2 focus:ring-emerald-500/20 outline-none"
+                      />
+                      <span className="text-xs text-slate-400 font-medium">cc</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-slate-400 font-bold">Tiap</span>
+                      <input 
+                        type="number" 
+                        name="oralFrequency" 
+                        value={inputs.oralFrequency} 
+                        onChange={handleInputChange}
+                        placeholder="0"
+                        className="w-12 bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-sm font-bold focus:ring-2 focus:ring-emerald-500/20 outline-none"
+                      />
+                      <span className="text-[10px] text-slate-400 font-bold">Jam</span>
+                    </div>
+                    <p className="text-[10px] text-emerald-600 font-bold mt-1">Total: {(results.totalOral || 0).toFixed(1)} ml</p>
+                  </div>
+
+                  <div className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Obat-obatan</label>
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="number" 
+                        name="medsVolume" 
+                        value={inputs.medsVolume} 
+                        onChange={handleInputChange}
+                        placeholder="0"
+                        className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-sm font-bold focus:ring-2 focus:ring-emerald-500/20 outline-none"
+                      />
+                      <span className="text-xs text-slate-400 font-medium">cc</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="number" 
+                        name="medsFrequency" 
+                        value={inputs.medsFrequency} 
+                        onChange={handleInputChange}
+                        placeholder="0"
+                        className="w-12 bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-sm font-bold focus:ring-2 focus:ring-emerald-500/20 outline-none"
+                      />
+                      <span className="text-[10px] text-slate-400 font-bold">X Sehari</span>
+                    </div>
+                    <p className="text-[10px] text-emerald-600 font-bold mt-1">Total: {(results.totalMeds || 0).toFixed(1)} ml</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Nutrition Parameters */}
+            <section className="bg-white rounded-[2rem] p-8 shadow-sm border border-slate-200/60">
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
+                  <FlaskConical size={20} />
+                </div>
+                <h2 className="text-lg font-bold text-slate-800">Parameter Nutrisi</h2>
+              </div>
+              
+              <div className="space-y-6">
+                <InputGroup 
+                  label="GIR (Glucose Infusion Rate)" 
+                  name="gir" 
+                  value={inputs.gir} 
+                  onChange={handleInputChange} 
+                  step={0.1}
+                  unit="mg/kg/mnt"
+                />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Aminosteril</label>
+                    <div className="flex gap-2">
+                      <input 
+                        type="number" 
+                        name="aminoDose" 
+                        value={inputs.aminoDose} 
+                        onChange={handleInputChange}
+                        step="0.1"
+                        placeholder="0"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-emerald-500/20 outline-none"
+                      />
+                      <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
+                        {([6, 10] as const).map(conc => (
+                          <button
+                            key={conc}
+                            type="button"
+                            onClick={() => setInputs(p => ({ ...p, aminoConcentration: conc }))}
+                            className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                              inputs.aminoConcentration === conc 
+                              ? 'bg-white text-emerald-600 shadow-sm' 
+                              : 'text-slate-400 hover:text-slate-600'
+                            }`}
+                          >
+                            {conc}%
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <InputGroup 
+                    label="Smoflipid" 
+                    name="lipidDose" 
+                    value={inputs.lipidDose} 
+                    onChange={handleInputChange} 
+                    step={0.1}
+                    unit="g/kg/hari"
+                  />
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <InputGroup label="Glikofosfat" name="glikofosfatDose" value={inputs.glikofosfatDose} onChange={handleInputChange} unit="ml/kg" step={0.1} />
+                  <InputGroup label="Soluvit" name="soluvitVolume" value={inputs.soluvitVolume} onChange={handleInputChange} unit="ml" />
+                  <InputGroup label="Vitalipid" name="vitalipidVolume" value={inputs.vitalipidVolume} onChange={handleInputChange} unit="ml" />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <InputGroup 
+                    label="Ca Glukonat" 
+                    name="caDose" 
+                    value={inputs.caDose} 
+                    onChange={handleInputChange} 
+                    step={0.1}
+                    unit="ml/kg"
+                  />
+                  <InputGroup 
+                    label="KCl" 
+                    name="kclDose" 
+                    value={inputs.kclDose} 
+                    onChange={handleInputChange} 
+                    step={0.1}
+                    unit="ml/kg"
+                  />
+                </div>
+
+                <div className="pt-2">
+                  <InputGroup 
+                    label="Balance Cairan (BC)" 
+                    name="balanceCairan" 
+                    value={inputs.balanceCairan} 
+                    onChange={handleInputChange} 
+                    unit="ml"
+                  />
+                  <p className="text-[9px] text-slate-400 mt-1 italic font-medium">
+                    *Jika BC positif, SISA (Infus) dikurangi 1/2 BC ({ (results.mainInfusionVolume < (parseFloat(inputs.totalFluidPerDay) || 0) - results.totalOral - results.totalMeds) ? (0.5 * (parseFloat(inputs.balanceCairan) || 0)).toFixed(1) : 0 } ml)
+                  </p>
+                </div>
+                
+                <div className="pt-2">
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">Cairan Dasar</label>
+                  <div className="flex gap-2 bg-slate-50 p-1 rounded-xl border border-slate-100">
+                    {(['D5 1/4 NS', 'D5 1/2 NS'] as const).map(type => (
+                      <button
+                        key={type}
+                        onClick={() => setInputs(p => ({ ...p, baseFluidType: type }))}
+                        className={`flex-1 py-2.5 rounded-lg text-xs font-bold transition-all ${
+                          inputs.baseFluidType === type 
+                          ? 'bg-white text-emerald-600 shadow-sm border border-slate-200' 
+                          : 'text-slate-400 hover:text-slate-600'
+                        }`}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          {/* RIGHT COLUMN: RESULTS */}
+          <div className="lg:col-span-7 space-y-6">
+            {/* Calorie Summary Card */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white rounded-[2rem] p-8 shadow-sm border border-slate-200/60 flex flex-col justify-between"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-2">
+                    <Zap size={18} className="text-amber-500" />
+                    <h3 className="text-sm font-bold text-slate-800">Cakupan Kalori</h3>
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Harian</span>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-4xl font-black text-slate-900 tracking-tighter">{(results.totalKcal || 0).toFixed(1)}</span>
+                    <span className="text-sm font-bold text-slate-400 uppercase">kcal/hari</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="px-3 py-1 bg-amber-50 text-amber-700 rounded-lg text-xs font-bold border border-amber-100">
+                      {(results.kcalPerKg || 0).toFixed(1)} kcal/kg/hari
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-6 pt-6 border-t border-slate-50 space-y-2">
+                  <div className="flex justify-between text-[10px] font-bold">
+                    <span className="text-slate-400 uppercase">Cakupan Oral</span>
+                    <span className="text-slate-900">{(results.oralPercent || 0).toFixed(1)}%</span>
+                  </div>
+                  <div className="flex justify-between text-[10px] font-bold">
+                    <span className="text-slate-400 uppercase">Cakupan Parenteral (Dextrose)</span>
+                    <span className="text-slate-900">{(results.dextrosePercent || 0).toFixed(1)}%</span>
+                  </div>
+                  <div className="flex justify-between text-[10px] font-bold">
+                    <span className="text-slate-400 uppercase">Cakupan Total (Oral + Dextrose)</span>
+                    <span className="text-slate-900">{( (results.oralPercent || 0) + (results.dextrosePercent || 0) ).toFixed(1)}%</span>
+                  </div>
+                  <div className="flex justify-between text-[10px] font-bold pt-2 border-t border-slate-50">
+                    <span className="text-emerald-600 uppercase">Total Kalori (Semua Sumber)</span>
+                    <span className="text-emerald-600">{(results.totalPercent || 0).toFixed(1)}%</span>
+                  </div>
+                </div>
+              </motion.div>
+
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="bg-white rounded-[2rem] p-8 shadow-sm border border-slate-200/60 flex flex-col justify-between"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-2">
+                    <PieChart size={18} className="text-blue-500" />
+                    <h3 className="text-sm font-bold text-slate-800">Cakupan Cairan</h3>
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Distribusi</span>
+                </div>
+                <div className="space-y-6">
+                      <div className="relative h-4 bg-slate-100 rounded-full overflow-hidden flex">
+                        <div 
+                          className="h-full bg-blue-500 transition-all duration-500" 
+                          style={{ width: `${results.oralFluidPercent}%` }}
+                        />
+                        <div 
+                          className="h-full bg-emerald-500 transition-all duration-500" 
+                          style={{ width: `${results.parenteralFluidPercent}%` }}
+                        />
+                      </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="space-y-1">
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Oral</p>
+                      <p className="text-sm font-bold text-blue-500">{(results.oralFluidPercent || 0).toFixed(0)}%</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Parenteral</p>
+                      <p className="text-sm font-bold text-emerald-600">{(results.parenteralFluidPercent || 0).toFixed(0)}%</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Total</p>
+                      <p className="text-sm font-bold text-slate-900">{(results.totalFluidPercent || 0).toFixed(0)}%</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-6 pt-6 border-t border-slate-50">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Volume</p>
+                  <p className="text-sm font-bold text-slate-900">{inputs.totalFluidPerDay} ml/hari</p>
+                </div>
+              </motion.div>
+            </div>
+
+            <AnimatePresence mode="wait">
+              <motion.div 
+                key={JSON.stringify(results)}
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-slate-900 rounded-[2.5rem] p-10 text-white shadow-2xl relative overflow-hidden"
+              >
+                {/* Visual Accents */}
+                <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full -mr-48 -mt-48 blur-[100px] pointer-events-none" />
+                
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between mb-12">
+                    <div className="flex items-center gap-2 px-4 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+                      <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">Hasil Kalkulasi TPN</span>
+                    </div>
+                  </div>
+
+                  {/* Main Stats */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-12">
+                    <ResultStat label="Main Infusion" value={results.mainInfusionVolume} unit="ml/hari" />
+                    <ResultStat label="Tetesan Utama" value={results.mainRatePerHour} unit="cc/jam" />
+                    <ResultStat label="Dextrose %" value={results.dPercent} unit="%" color="text-emerald-400" />
+                  </div>
+
+                  {/* Detailed Composition */}
+                  <div className="space-y-10 mb-12">
+                    {/* Block 1: Main Infusion */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
+                        <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">1. Main Infusion ({(results.mainRatePerHour || 0).toFixed(1)} cc/jam)</h3>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <CompositionRow label={inputs.baseFluidType} value={results.finalBaseFluid} unit="ml" isBase useSmartRounding={useSmartRounding} />
+                        <CompositionRow label="Dextrose 40% (D40)" value={results.finalD40} unit="ml" useSmartRounding={useSmartRounding} />
+                        <CompositionRow label="KCl" value={results.finalKcl} unit="ml" useSmartRounding={useSmartRounding} />
+                        <CompositionRow label="Ca Glukonat" value={results.finalCa} unit="ml" useSmartRounding={useSmartRounding} />
+                        <CompositionRow label="Glikofosfat" value={results.finalGliko} unit="ml" useSmartRounding={useSmartRounding} />
+                      </div>
+                    </div>
+
+                    {/* Block 2: Amino Acid */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 bg-blue-400 rounded-full" />
+                        <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">2. Amino Acid ({(results.aminoRatePerHour || 0).toFixed(1)} cc/jam)</h3>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <CompositionRow label={`Aminosteril ${inputs.aminoConcentration}%`} value={results.finalAmino} unit="ml" useSmartRounding={useSmartRounding} />
+                      </div>
+                    </div>
+
+                    {/* Block 3: Lipid Infusion */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 bg-amber-400 rounded-full" />
+                        <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">3. Lipid Infusion ({(results.lipidRatePerHour || 0).toFixed(1)} cc/jam)</h3>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <CompositionRow label="Smoflipid 20%" value={results.finalLipid} unit="ml" useSmartRounding={useSmartRounding} />
+                        <CompositionRow label="Soluvit" value={inputs.soluvitVolume} unit="ml" useSmartRounding={useSmartRounding} />
+                        <CompositionRow label="Vitalipid" value={inputs.vitalipidVolume} unit="ml" useSmartRounding={useSmartRounding} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Final Equation */}
+                  <div className="bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-sm">
+                    <div className="flex items-center gap-2 mb-6">
+                      <ClipboardCheck size={16} className="text-emerald-400" />
+                      <h4 className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Format Peresepan (Moewardi)</h4>
+                    </div>
+                    
+                    <div className="font-mono text-sm md:text-base leading-relaxed text-slate-100 space-y-6">
+                      <div>
+                        <p className="text-emerald-400 font-bold mb-2 uppercase tracking-wider">1. INFUS UTAMA (D {(results.dPercent || 0).toFixed(1)}%, GIR {inputs.gir})</p>
+                        <p className="bg-white/5 p-4 rounded-2xl border border-white/10 text-sm md:text-base">
+                          {inputs.baseFluidType} <span className="text-white">{(results.finalBaseFluid || 0).toFixed(useSmartRounding ? 0 : 1)} ml</span> + 
+                          D40 <span className="text-white">{(results.finalD40 || 0).toFixed(useSmartRounding ? 0 : 1)} ml</span> + 
+                          KCl <span className="text-white">{(results.finalKcl || 0).toFixed(useSmartRounding ? 0 : 1)} ml</span> + 
+                          CaGluc <span className="text-white">{(results.finalCa || 0).toFixed(useSmartRounding ? 0 : 1)} ml</span> + 
+                          Glikofosfat <span className="text-white">{(results.finalGliko || 0).toFixed(useSmartRounding ? 0 : 1)} ml</span> = 
+                          <span className="text-emerald-400 font-bold ml-2">{(results.mainInfusionVolume || 0).toFixed(0)} ml/hari ({(results.mainRatePerHour || 0).toFixed(1)} cc/jam)</span>
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-blue-400 font-bold mb-2 uppercase tracking-wider">2. INFUS AMINOSTERIL {inputs.aminoConcentration}%</p>
+                        <p className="bg-white/5 p-4 rounded-2xl border border-white/10 text-sm md:text-base">
+                          Aminosteril {inputs.aminoConcentration}% = <span className="text-blue-400 font-bold">{(results.finalAmino || 0).toFixed(useSmartRounding ? 0 : 1)} ml/hari ({(results.aminoRatePerHour || 0).toFixed(1)} cc/jam)</span>
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-amber-400 font-bold mb-2 uppercase tracking-wider">3. INFUS SMOFLIPID 20%</p>
+                        <p className="bg-white/5 p-4 rounded-2xl border border-white/10 text-sm md:text-base">
+                          Smoflipid 20% <span className="text-white">{(results.finalLipid || 0).toFixed(useSmartRounding ? 0 : 1)} ml</span> + 
+                          Soluvit <span className="text-white">{(parseFloat(inputs.soluvitVolume) || 0).toFixed(useSmartRounding ? 0 : 1)} ml</span> + 
+                          Vitalipid <span className="text-white">{(parseFloat(inputs.vitalipidVolume) || 0).toFixed(useSmartRounding ? 0 : 1)} ml</span> = 
+                          <span className="text-amber-400 font-bold ml-2">{(results.totalLipidInfusion || 0).toFixed(0)} ml/hari ({(results.lipidRatePerHour || 0).toFixed(1)} cc/jam)</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Alerts & Notes */}
+            <div className="space-y-4">
+              {results.isLowGIR && (
+                <motion.div 
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex gap-4 items-start shadow-sm"
+                >
+                  <AlertCircle className="text-amber-600 shrink-0" size={24} />
+                  <div>
+                    <h5 className="text-sm font-bold text-amber-900 mb-1">Peringatan: D% Rendah</h5>
+                    <p className="text-xs text-amber-700 leading-relaxed font-medium">
+                      Konsentrasi Dekstrosa ({(results.dPercent || 0).toFixed(2)}%) lebih rendah dari cairan dasar (5%). 
+                      Naikkan GIR atau gunakan cairan dasar lain.
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+
+              <div className="bg-white rounded-[2rem] p-8 border border-slate-200/60 shadow-sm">
+                <div className="flex items-center gap-2 mb-6">
+                  <Info size={18} className="text-emerald-600" />
+                  <h3 className="text-sm font-bold text-slate-800">Catatan Nutrisi</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="space-y-3">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Parameter Nutrisi</p>
+                    <ul className="text-[10px] text-slate-500 font-medium space-y-1">
+                      <li>• Target Kalori: 120 kcal/kg/hari</li>
+                      <li>• GIR Neo: 3 - 5 mg/kg/mnt (Mulai)</li>
+                      <li>• Aminosteril: 2 - 4 g/kg/hari</li>
+                      <li>• Smoflipid: 1 - 3 g/kg/hari</li>
+                    </ul>
+                  </div>
+                  <div className="space-y-3">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Elektrolit & Mineral</p>
+                    <ul className="text-[10px] text-slate-500 font-medium space-y-1">
+                      <li>• KCl: 1 - 2 ml/kg</li>
+                      <li>• Ca Glukonat: 2 ml/kg (Jika HipoCa)</li>
+                      <li>• Glikofosfat: 1 ml/kg (1/2 Ca Gluk)</li>
+                    </ul>
+                  </div>
+                  <div className="space-y-3">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Rumus Darrow</p>
+                    <ul className="text-[10px] text-slate-500 font-medium space-y-1">
+                      <li>• 0-10 kg: 100 ml/kg</li>
+                      <li>• 10-20 kg: 1000 + 50 ml/kg</li>
+                      <li>• &gt;20 kg: 1500 + 20 ml/kg</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <MilkReferenceModal 
+        isOpen={isMilkModalOpen} 
+        onClose={() => setIsMilkModalOpen(false)} 
+      />
+      <MilkReferenceModal 
+        isOpen={isMilkModalOpen} 
+        onClose={() => setIsMilkModalOpen(false)} 
+      />
+    </div>
+  );
+}
+
+// Sub-components
+function InputGroup({ label, name, value, onChange, unit, step = 1 }: { 
+  label: string, 
+  name: string, 
+  value: string, 
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void,
+  unit: string,
+  step?: number | string
+}) {
+  return (
+    <div className="space-y-2">
+      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+        {label}
+      </label>
+      <div className="relative group">
+        <input
+          type="number"
+          name={name}
+          value={value}
+          onChange={onChange}
+          step={step}
+          placeholder="0"
+          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-5 py-3.5 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
+        />
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 uppercase tracking-widest pointer-events-none group-focus-within:text-emerald-500 transition-colors">
+          {unit}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ResultStat({ label, value, unit, color = "text-white" }: { label: string, value: number | string | undefined | null, unit: string, color?: string }) {
+  const numValue = Number(value) || 0;
+  return (
+    <div className="space-y-2">
+      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">{label}</p>
+      <div className="flex items-baseline gap-2">
+        <span className={`text-3xl font-bold tracking-tight ${color}`}>
+          {unit === 'ml/hari' ? numValue.toFixed(0) : numValue.toFixed(1)}
+        </span>
+        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{unit}</span>
+      </div>
+    </div>
+  );
+}
+
+function CompositionRow({ label, value, unit, isBase = false, useSmartRounding = true }: { label: string, value: number | string | undefined | null, unit: string, isBase?: boolean, useSmartRounding?: boolean }) {
+  const numValue = Number(value) || 0;
+  return (
+    <div className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${
+      isBase 
+      ? 'bg-emerald-500/5 border-emerald-500/10' 
+      : 'bg-white/5 border-white/5'
+    }`}>
+      <span className={`text-xs font-bold ${isBase ? 'text-emerald-400' : 'text-slate-400'}`}>{label}</span>
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-bold text-white">{numValue.toFixed(useSmartRounding ? 0 : 1)}</span>
+        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{unit}</span>
+      </div>
+    </div>
+  );
+}
