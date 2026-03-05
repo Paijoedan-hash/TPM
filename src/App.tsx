@@ -31,9 +31,10 @@ interface TPNInputs {
   weightUnit: 'kg' | 'g';
   totalFluidPerDay: string;
   // Oral detail
-  oralVolume: string;
-  oralFrequency: string; 
-  oralType: 'ASI' | 'Sufor';
+  asiVolume: string;
+  asiFrequency: string;
+  suforVolume: string;
+  suforFrequency: string;
   // Meds detail
   medsVolume: string;
   medsFrequency: string; 
@@ -66,9 +67,10 @@ export default function App() {
     weight: '1.5',
     weightUnit: 'kg',
     totalFluidPerDay: '150',
-    oralVolume: '2',
-    oralFrequency: '3',
-    oralType: 'ASI',
+    asiVolume: '2',
+    asiFrequency: '3',
+    suforVolume: '0',
+    suforFrequency: '3',
     medsVolume: '1',
     medsFrequency: '2',
     aminoDose: '2',
@@ -110,9 +112,10 @@ export default function App() {
       weight: parseNumericInput(inputs.weight),
       weightUnit: inputs.weightUnit,
       totalFluidPerDay: parseNumericInput(inputs.totalFluidPerDay),
-      oralVolume: parseNumericInput(inputs.oralVolume),
-      oralFrequency: parseNumericInput(inputs.oralFrequency),
-      oralType: inputs.oralType,
+      asiVolume: parseNumericInput(inputs.asiVolume),
+      asiFrequency: parseNumericInput(inputs.asiFrequency),
+      suforVolume: parseNumericInput(inputs.suforVolume),
+      suforFrequency: parseNumericInput(inputs.suforFrequency),
       medsVolume: parseNumericInput(inputs.medsVolume),
       medsFrequency: parseNumericInput(inputs.medsFrequency),
       aminoDose: parseNumericInput(inputs.aminoDose),
@@ -151,9 +154,10 @@ export default function App() {
       weight: '1.5',
       weightUnit: 'kg',
       totalFluidPerDay: '150',
-      oralVolume: '2',
-      oralFrequency: '3',
-      oralType: 'ASI',
+      asiVolume: '2',
+      asiFrequency: '3',
+      suforVolume: '0',
+      suforFrequency: '3',
       medsVolume: '1',
       medsFrequency: '2',
       aminoDose: '2',
@@ -175,9 +179,10 @@ export default function App() {
       weight: '',
       weightUnit: 'kg',
       totalFluidPerDay: '',
-      oralVolume: '',
-      oralFrequency: '',
-      oralType: 'ASI',
+      asiVolume: '',
+      asiFrequency: '',
+      suforVolume: '',
+      suforFrequency: '',
       medsVolume: '',
       medsFrequency: '',
       aminoDose: '',
@@ -320,47 +325,63 @@ export default function App() {
                           className="text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 p-1 rounded-md transition-colors"
                           title="Referensi Kalori Susu"
                         >
-                          <BookOpen size={12} />
-                        </button>
-                      </div>
-                      <div className="flex bg-white p-0.5 rounded-lg border border-slate-200">
-                        {(['ASI', 'Sufor'] as const).map(type => (
-                          <button
-                            key={type}
-                            onClick={() => setInputs(p => ({ ...p, oralType: type }))}
-                            className={`px-2 py-1 rounded-md text-[9px] font-bold transition-all ${
-                              inputs.oralType === type 
-                              ? 'bg-emerald-600 text-white shadow-sm' 
-                              : 'text-slate-400 hover:text-slate-600'
-                            }`}
-                          >
-                            {type}
+                            <BookOpen size={12} />
                           </button>
-                        ))}
+                        </div>
+                    </div>
+                    <div className="space-y-2 p-2 bg-white rounded-xl border border-slate-200">
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">ASI</p>
+                      <div className="flex items-center gap-2">
+                        <input 
+                          type="number" 
+                          name="asiVolume" 
+                          value={inputs.asiVolume} 
+                          onChange={handleInputChange}
+                          placeholder="0"
+                          className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-sm font-bold focus:ring-2 focus:ring-emerald-500/20 outline-none"
+                        />
+                        <span className="text-xs text-slate-400 font-medium">cc</span>
                       </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-slate-400 font-bold">Tiap</span>
+                        <input 
+                          type="number" 
+                          name="asiFrequency" 
+                          value={inputs.asiFrequency} 
+                          onChange={handleInputChange}
+                          placeholder="0"
+                          className="w-12 bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-sm font-bold focus:ring-2 focus:ring-emerald-500/20 outline-none"
+                        />
+                        <span className="text-[10px] text-slate-400 font-bold">Jam</span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 font-bold">Total ASI: {(results.totalAsiOral || 0).toFixed(1)} ml</p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <input 
-                        type="number" 
-                        name="oralVolume" 
-                        value={inputs.oralVolume} 
-                        onChange={handleInputChange}
-                        placeholder="0"
-                        className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-sm font-bold focus:ring-2 focus:ring-emerald-500/20 outline-none"
-                      />
-                      <span className="text-xs text-slate-400 font-medium">cc</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-slate-400 font-bold">Tiap</span>
-                      <input 
-                        type="number" 
-                        name="oralFrequency" 
-                        value={inputs.oralFrequency} 
-                        onChange={handleInputChange}
-                        placeholder="0"
-                        className="w-12 bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-sm font-bold focus:ring-2 focus:ring-emerald-500/20 outline-none"
-                      />
-                      <span className="text-[10px] text-slate-400 font-bold">Jam</span>
+                    <div className="space-y-2 p-2 bg-white rounded-xl border border-slate-200">
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Sufor</p>
+                      <div className="flex items-center gap-2">
+                        <input 
+                          type="number" 
+                          name="suforVolume" 
+                          value={inputs.suforVolume} 
+                          onChange={handleInputChange}
+                          placeholder="0"
+                          className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-sm font-bold focus:ring-2 focus:ring-emerald-500/20 outline-none"
+                        />
+                        <span className="text-xs text-slate-400 font-medium">cc</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-slate-400 font-bold">Tiap</span>
+                        <input 
+                          type="number" 
+                          name="suforFrequency" 
+                          value={inputs.suforFrequency} 
+                          onChange={handleInputChange}
+                          placeholder="0"
+                          className="w-12 bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-sm font-bold focus:ring-2 focus:ring-emerald-500/20 outline-none"
+                        />
+                        <span className="text-[10px] text-slate-400 font-bold">Jam</span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 font-bold">Total Sufor: {(results.totalSuforOral || 0).toFixed(1)} ml</p>
                     </div>
                     <p className="text-[10px] text-emerald-600 font-bold mt-1">Total: {(results.totalOral || 0).toFixed(1)} ml</p>
                   </div>
