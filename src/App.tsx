@@ -554,6 +554,28 @@ export default function App() {
                     <span className="text-emerald-600">{(results.totalPercent || 0).toFixed(1)}%</span>
                   </div>
                 </div>
+                <div className="mt-4 pt-4 border-t border-slate-50 space-y-2 text-[10px] font-bold">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400 uppercase">ASI × 0.7</span>
+                    <span className="text-slate-900">{(results.asiKcalReport || 0).toFixed(1)} kkal</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400 uppercase">Formula × 0.8</span>
+                    <span className="text-slate-900">{(results.formulaKcalReport || 0).toFixed(1)} kkal</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400 uppercase">Dextrose (Rumus Inf D)</span>
+                    <span className="text-slate-900">{(results.dextroseKcalReport || 0).toFixed(1)} kkal</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400 uppercase">Protein (Aminosteril × 0.4)</span>
+                    <span className="text-slate-900">{(results.proteinKcalReport || 0).toFixed(1)} kkal</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400 uppercase">Lipid (Smoflipid × 1.8)</span>
+                    <span className="text-slate-900">{(results.lipidKcalReport || 0).toFixed(1)} kkal</span>
+                  </div>
+                </div>
               </motion.div>
 
               <motion.div 
@@ -700,8 +722,8 @@ export default function App() {
                         <p className="text-amber-400 font-bold mb-2 uppercase tracking-wider">3. INFUS SMOFLIPID 20%</p>
                         <p className="bg-white/5 p-4 rounded-2xl border border-white/10 text-sm md:text-base">
                           Smoflipid 20% <span className="text-white">{(results.finalLipid || 0).toFixed(useSmartRounding ? 0 : 1)} ml</span> + 
-                          Soluvit <span className="text-white">{(parseFloat(inputs.soluvitVolume) || 0).toFixed(useSmartRounding ? 0 : 1)} ml</span> + 
-                          Vitalipid <span className="text-white">{(parseFloat(inputs.vitalipidVolume) || 0).toFixed(useSmartRounding ? 0 : 1)} ml</span> = 
+                          Soluvit <span className="text-white">{parseNumericInput(inputs.soluvitVolume).toFixed(useSmartRounding ? 0 : 1)} ml</span> + 
+                          Vitalipid <span className="text-white">{parseNumericInput(inputs.vitalipidVolume).toFixed(useSmartRounding ? 0 : 1)} ml</span> = 
                           <span className="text-amber-400 font-bold ml-2">{(results.totalLipidInfusion || 0).toFixed(0)} ml/hari ({(results.lipidRatePerHour || 0).toFixed(1)} cc/jam)</span>
                         </p>
                       </div>

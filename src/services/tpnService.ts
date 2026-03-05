@@ -183,6 +183,12 @@ export const calculateTPN = (inputs: TPNCalculationInputs) => {
   
   const finalBaseFluid = Math.max(0, mainInfusionVolume - finalD40 - finalCa - finalKcl - finalGliko);
 
+  const asiKcalReport = oralType === 'ASI' ? totalOral * 0.7 : 0;
+  const formulaKcalReport = oralType === 'Sufor' ? totalOral * 0.8 : 0;
+  const dextroseKcalReport = ((((mainInfusionVolume - finalGliko - finalCa - finalKcl - finalD40) + finalD40) * (4 * dPercent)) / 100);
+  const proteinKcalReport = finalAmino * 0.4;
+  const lipidKcalReport = finalLipid * 1.8;
+
   const calResults = calculateCalories(
     finalBaseFluid,
     finalD40,
@@ -223,6 +229,11 @@ export const calculateTPN = (inputs: TPNCalculationInputs) => {
     finalAmino,
     finalLipid,
     finalBaseFluid,
+    asiKcalReport,
+    formulaKcalReport,
+    dextroseKcalReport,
+    proteinKcalReport,
+    lipidKcalReport,
     ...calResults,
     kebutuhanKaloriTotal,
     dextrosePercent,
