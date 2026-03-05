@@ -54,13 +54,13 @@ interface TPNInputs {
   baseFluidType: 'D5 1/4 NS' | 'D5 1/2 NS';
 }
 
-export default function App() {
-  const parseNumericInput = (value: string): number => {
-    const normalizedValue = value.trim().replace(',', '.');
-    const parsedValue = Number(normalizedValue);
-    return Number.isFinite(parsedValue) ? parsedValue : 0;
-  };
+const parseNumericInput = (value: string): number => {
+  const normalizedValue = value.trim().replace(/,/g, '.');
+  const parsedValue = Number(normalizedValue);
+  return Number.isFinite(parsedValue) ? parsedValue : 0;
+};
 
+export default function App() {
   const [isMilkModalOpen, setIsMilkModalOpen] = useState(false);
   const [inputs, setInputs] = useState<TPNInputs>({
     weight: '1.5',
@@ -134,7 +134,7 @@ export default function App() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    const normalizedValue = value.replace(',', '.');
+    const normalizedValue = value.replace(/,/g, '.');
     setInputs(prev => ({
       ...prev,
       [name]: normalizedValue
