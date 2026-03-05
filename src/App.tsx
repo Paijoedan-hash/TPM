@@ -54,6 +54,12 @@ interface TPNInputs {
   baseFluidType: 'D5 1/4 NS' | 'D5 1/2 NS';
 }
 
+const parseNumericInput = (value: string): number => {
+  const normalizedValue = value.trim().replace(/,/g, '.');
+  const parsedValue = Number(normalizedValue);
+  return Number.isFinite(parsedValue) ? parsedValue : 0;
+};
+
 export default function App() {
   const [isMilkModalOpen, setIsMilkModalOpen] = useState(false);
   const [inputs, setInputs] = useState<TPNInputs>({
@@ -91,7 +97,7 @@ export default function App() {
 
   // Auto-calculate fluid when weight changes
   useEffect(() => {
-    const w = parseFloat(inputs.weight) || 0;
+    const w = parseNumericInput(inputs.weight);
     const darrowFluid = calculateDarrowFluid(w, inputs.weightUnit);
     if (darrowFluid > 0) {
       setInputs(prev => ({ ...prev, totalFluidPerDay: Math.round(darrowFluid).toString() }));
@@ -101,24 +107,24 @@ export default function App() {
   // Calculations
   const results = useMemo(() => {
     const calculationInputs: TPNCalculationInputs = {
-      weight: parseFloat(inputs.weight) || 0,
+      weight: parseNumericInput(inputs.weight),
       weightUnit: inputs.weightUnit,
-      totalFluidPerDay: parseFloat(inputs.totalFluidPerDay) || 0,
-      oralVolume: parseFloat(inputs.oralVolume) || 0,
-      oralFrequency: parseFloat(inputs.oralFrequency) || 0,
+      totalFluidPerDay: parseNumericInput(inputs.totalFluidPerDay),
+      oralVolume: parseNumericInput(inputs.oralVolume),
+      oralFrequency: parseNumericInput(inputs.oralFrequency),
       oralType: inputs.oralType,
-      medsVolume: parseFloat(inputs.medsVolume) || 0,
-      medsFrequency: parseFloat(inputs.medsFrequency) || 0,
-      aminoDose: parseFloat(inputs.aminoDose) || 0,
+      medsVolume: parseNumericInput(inputs.medsVolume),
+      medsFrequency: parseNumericInput(inputs.medsFrequency),
+      aminoDose: parseNumericInput(inputs.aminoDose),
       aminoConcentration: inputs.aminoConcentration,
-      lipidDose: parseFloat(inputs.lipidDose) || 0,
-      balanceCairan: parseFloat(inputs.balanceCairan) || 0,
-      glikofosfatDose: parseFloat(inputs.glikofosfatDose) || 0,
-      soluvitVolume: parseFloat(inputs.soluvitVolume) || 0,
-      vitalipidVolume: parseFloat(inputs.vitalipidVolume) || 0,
-      gir: parseFloat(inputs.gir) || 0,
-      caDose: parseFloat(inputs.caDose) || 0,
-      kclDose: parseFloat(inputs.kclDose) || 0,
+      lipidDose: parseNumericInput(inputs.lipidDose),
+      balanceCairan: parseNumericInput(inputs.balanceCairan),
+      glikofosfatDose: parseNumericInput(inputs.glikofosfatDose),
+      soluvitVolume: parseNumericInput(inputs.soluvitVolume),
+      vitalipidVolume: parseNumericInput(inputs.vitalipidVolume),
+      gir: parseNumericInput(inputs.gir),
+      caDose: parseNumericInput(inputs.caDose),
+      kclDose: parseNumericInput(inputs.kclDose),
       baseFluidType: inputs.baseFluidType,
       useSmartRounding
     };
@@ -126,11 +132,17 @@ export default function App() {
     return calculateTPN(calculationInputs);
   }, [inputs, useSmartRounding]);
 
+  const { soluvitVolumeValue, vitalipidVolumeValue } = useMemo(() => ({
+    soluvitVolumeValue: parseNumericInput(inputs.soluvitVolume),
+    vitalipidVolumeValue: parseNumericInput(inputs.vitalipidVolume),
+  }), [inputs.soluvitVolume, inputs.vitalipidVolume]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    const normalizedValue = value.replace(/,/g, '.');
     setInputs(prev => ({
       ...prev,
-      [name]: value
+      [name]: normalizedValue
     }));
   };
 
@@ -476,7 +488,7 @@ export default function App() {
                     unit="ml"
                   />
                   <p className="text-[9px] text-slate-400 mt-1 italic font-medium">
-                    *Jika BC positif, SISA (Infus) dikurangi 1/2 BC ({ (results.mainInfusionVolume < (parseFloat(inputs.totalFluidPerDay) || 0) - results.totalOral - results.totalMeds) ? (0.5 * (parseFloat(inputs.balanceCairan) || 0)).toFixed(1) : 0 } ml)
+                    *Jika BC positif, SISA (Infus) dikurangi 1/2 BC ({ (results.mainInfusionVolume < parseNumericInput(inputs.totalFluidPerDay) - results.totalOral - results.totalMeds) ? (0.5 * parseNumericInput(inputs.balanceCairan)).toFixed(1) : 0 } ml)
                   </p>
                 </div>
                 
@@ -545,6 +557,28 @@ export default function App() {
                   <div className="flex justify-between text-[10px] font-bold pt-2 border-t border-slate-50">
                     <span className="text-emerald-600 uppercase">Total Kalori (Semua Sumber)</span>
                     <span className="text-emerald-600">{(results.totalPercent || 0).toFixed(1)}%</span>
+                  </div>
+                </div>
+                <div className="mt-4 pt-4 border-t border-slate-50 space-y-2 text-[10px] font-bold">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400 uppercase">ASI × 0.7</span>
+                    <span className="text-slate-900">{(results.asiKcalReport || 0).toFixed(1)} kkal</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400 uppercase">Formula × 0.8</span>
+                    <span className="text-slate-900">{(results.formulaKcalReport || 0).toFixed(1)} kkal</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400 uppercase">Dextrose (Rumus Inf D)</span>
+                    <span className="text-slate-900">{(results.dextroseKcalReport || 0).toFixed(1)} kkal</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400 uppercase">Protein (Aminosteril × 0.4)</span>
+                    <span className="text-slate-900">{(results.proteinKcalReport || 0).toFixed(1)} kkal</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400 uppercase">Lipid (Smoflipid × 1.8)</span>
+                    <span className="text-slate-900">{(results.lipidKcalReport || 0).toFixed(1)} kkal</span>
                   </div>
                 </div>
               </motion.div>
@@ -693,8 +727,8 @@ export default function App() {
                         <p className="text-amber-400 font-bold mb-2 uppercase tracking-wider">3. INFUS SMOFLIPID 20%</p>
                         <p className="bg-white/5 p-4 rounded-2xl border border-white/10 text-sm md:text-base">
                           Smoflipid 20% <span className="text-white">{(results.finalLipid || 0).toFixed(useSmartRounding ? 0 : 1)} ml</span> + 
-                          Soluvit <span className="text-white">{(parseFloat(inputs.soluvitVolume) || 0).toFixed(useSmartRounding ? 0 : 1)} ml</span> + 
-                          Vitalipid <span className="text-white">{(parseFloat(inputs.vitalipidVolume) || 0).toFixed(useSmartRounding ? 0 : 1)} ml</span> = 
+                          Soluvit <span className="text-white">{soluvitVolumeValue.toFixed(useSmartRounding ? 0 : 1)} ml</span> + 
+                          Vitalipid <span className="text-white">{vitalipidVolumeValue.toFixed(useSmartRounding ? 0 : 1)} ml</span> = 
                           <span className="text-amber-400 font-bold ml-2">{(results.totalLipidInfusion || 0).toFixed(0)} ml/hari ({(results.lipidRatePerHour || 0).toFixed(1)} cc/jam)</span>
                         </p>
                       </div>

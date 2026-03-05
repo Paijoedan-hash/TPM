@@ -27,6 +27,11 @@ export interface TPNCalculationInputs {
   useSmartRounding: boolean;
 }
 
+const ASI_KCAL_MULTIPLIER = 0.7;
+const FORMULA_KCAL_MULTIPLIER = 0.8;
+const PROTEIN_KCAL_MULTIPLIER = 0.4;
+const LIPID_KCAL_MULTIPLIER = 1.8;
+
 export const calculateWeightInKg = (weight: number, unit: 'kg' | 'g'): number => {
   return unit === 'g' ? weight / 1000 : weight;
 };
@@ -183,6 +188,13 @@ export const calculateTPN = (inputs: TPNCalculationInputs) => {
   
   const finalBaseFluid = Math.max(0, mainInfusionVolume - finalD40 - finalCa - finalKcl - finalGliko);
 
+  const asiKcalReport = oralType === 'ASI' ? totalOral * ASI_KCAL_MULTIPLIER : 0;
+  const formulaKcalReport = oralType === 'Sufor' ? totalOral * FORMULA_KCAL_MULTIPLIER : 0;
+  const dextroseBaseVolume = finalBaseFluid + finalD40;
+  const dextroseKcalReport = (dextroseBaseVolume * (4 * dPercent)) / 100;
+  const proteinKcalReport = finalAmino * PROTEIN_KCAL_MULTIPLIER;
+  const lipidKcalReport = finalLipid * LIPID_KCAL_MULTIPLIER;
+
   const calResults = calculateCalories(
     finalBaseFluid,
     finalD40,
@@ -223,6 +235,11 @@ export const calculateTPN = (inputs: TPNCalculationInputs) => {
     finalAmino,
     finalLipid,
     finalBaseFluid,
+    asiKcalReport,
+    formulaKcalReport,
+    dextroseKcalReport,
+    proteinKcalReport,
+    lipidKcalReport,
     ...calResults,
     kebutuhanKaloriTotal,
     dextrosePercent,
