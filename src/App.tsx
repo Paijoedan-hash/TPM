@@ -55,6 +55,12 @@ interface TPNInputs {
 }
 
 export default function App() {
+  const parseNumericInput = (value: string): number => {
+    const normalizedValue = value.trim().replace(',', '.');
+    const parsedValue = Number(normalizedValue);
+    return Number.isFinite(parsedValue) ? parsedValue : 0;
+  };
+
   const [isMilkModalOpen, setIsMilkModalOpen] = useState(false);
   const [inputs, setInputs] = useState<TPNInputs>({
     weight: '1.5',
@@ -91,7 +97,7 @@ export default function App() {
 
   // Auto-calculate fluid when weight changes
   useEffect(() => {
-    const w = parseFloat(inputs.weight) || 0;
+    const w = parseNumericInput(inputs.weight);
     const darrowFluid = calculateDarrowFluid(w, inputs.weightUnit);
     if (darrowFluid > 0) {
       setInputs(prev => ({ ...prev, totalFluidPerDay: Math.round(darrowFluid).toString() }));
@@ -101,24 +107,24 @@ export default function App() {
   // Calculations
   const results = useMemo(() => {
     const calculationInputs: TPNCalculationInputs = {
-      weight: parseFloat(inputs.weight) || 0,
+      weight: parseNumericInput(inputs.weight),
       weightUnit: inputs.weightUnit,
-      totalFluidPerDay: parseFloat(inputs.totalFluidPerDay) || 0,
-      oralVolume: parseFloat(inputs.oralVolume) || 0,
-      oralFrequency: parseFloat(inputs.oralFrequency) || 0,
+      totalFluidPerDay: parseNumericInput(inputs.totalFluidPerDay),
+      oralVolume: parseNumericInput(inputs.oralVolume),
+      oralFrequency: parseNumericInput(inputs.oralFrequency),
       oralType: inputs.oralType,
-      medsVolume: parseFloat(inputs.medsVolume) || 0,
-      medsFrequency: parseFloat(inputs.medsFrequency) || 0,
-      aminoDose: parseFloat(inputs.aminoDose) || 0,
+      medsVolume: parseNumericInput(inputs.medsVolume),
+      medsFrequency: parseNumericInput(inputs.medsFrequency),
+      aminoDose: parseNumericInput(inputs.aminoDose),
       aminoConcentration: inputs.aminoConcentration,
-      lipidDose: parseFloat(inputs.lipidDose) || 0,
-      balanceCairan: parseFloat(inputs.balanceCairan) || 0,
-      glikofosfatDose: parseFloat(inputs.glikofosfatDose) || 0,
-      soluvitVolume: parseFloat(inputs.soluvitVolume) || 0,
-      vitalipidVolume: parseFloat(inputs.vitalipidVolume) || 0,
-      gir: parseFloat(inputs.gir) || 0,
-      caDose: parseFloat(inputs.caDose) || 0,
-      kclDose: parseFloat(inputs.kclDose) || 0,
+      lipidDose: parseNumericInput(inputs.lipidDose),
+      balanceCairan: parseNumericInput(inputs.balanceCairan),
+      glikofosfatDose: parseNumericInput(inputs.glikofosfatDose),
+      soluvitVolume: parseNumericInput(inputs.soluvitVolume),
+      vitalipidVolume: parseNumericInput(inputs.vitalipidVolume),
+      gir: parseNumericInput(inputs.gir),
+      caDose: parseNumericInput(inputs.caDose),
+      kclDose: parseNumericInput(inputs.kclDose),
       baseFluidType: inputs.baseFluidType,
       useSmartRounding
     };
@@ -128,9 +134,10 @@ export default function App() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    const normalizedValue = value.replace(',', '.');
     setInputs(prev => ({
       ...prev,
-      [name]: value
+      [name]: normalizedValue
     }));
   };
 
@@ -476,7 +483,7 @@ export default function App() {
                     unit="ml"
                   />
                   <p className="text-[9px] text-slate-400 mt-1 italic font-medium">
-                    *Jika BC positif, SISA (Infus) dikurangi 1/2 BC ({ (results.mainInfusionVolume < (parseFloat(inputs.totalFluidPerDay) || 0) - results.totalOral - results.totalMeds) ? (0.5 * (parseFloat(inputs.balanceCairan) || 0)).toFixed(1) : 0 } ml)
+                    *Jika BC positif, SISA (Infus) dikurangi 1/2 BC ({ (results.mainInfusionVolume < parseNumericInput(inputs.totalFluidPerDay) - results.totalOral - results.totalMeds) ? (0.5 * parseNumericInput(inputs.balanceCairan)).toFixed(1) : 0 } ml)
                   </p>
                 </div>
                 
