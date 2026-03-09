@@ -24,6 +24,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { calculateTPN, TPNCalculationInputs } from './services/tpnService';
 import { MilkReferenceModal } from './components/MilkReferenceModal';
+import { IcuCalculatorModal } from './components/IcuCalculatorModal';
 
 // Types
 interface TPNInputs {
@@ -63,6 +64,7 @@ const parseNumericInput = (value: string): number => {
 
 export default function App() {
   const [isMilkModalOpen, setIsMilkModalOpen] = useState(false);
+  const [isIcuModalOpen, setIsIcuModalOpen] = useState(false);
   const [inputs, setInputs] = useState<TPNInputs>({
     weight: '1.5',
     weightUnit: 'kg',
@@ -250,6 +252,15 @@ export default function App() {
                 title="Kosongkan Semua (0)"
               >
                 <Trash2 size={18} />
+              </button>
+              <div className="w-px h-6 bg-slate-200 mx-1" />
+              <button
+                onClick={() => setIsIcuModalOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-all"
+                title="Kalkulator ICU"
+              >
+                <Activity size={14} />
+                Kalkulator ICU
               </button>
             </div>
           </div>
@@ -822,6 +833,10 @@ export default function App() {
       <MilkReferenceModal 
         isOpen={isMilkModalOpen} 
         onClose={() => setIsMilkModalOpen(false)} 
+      />
+      <IcuCalculatorModal
+        isOpen={isIcuModalOpen}
+        onClose={() => setIsIcuModalOpen(false)}
       />
     </div>
   );
