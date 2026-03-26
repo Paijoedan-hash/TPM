@@ -31,11 +31,16 @@ interface TPNInputs {
   weight: string;
   weightUnit: 'kg' | 'g';
   totalFluidPerDay: string;
+  fluidNeedConstant: string;
+  calorieNeedConstant: string;
+  enteralMinPer3Hours: string;
+  enteralMaxPer3Hours: string;
   // Oral detail
   asiVolume: string;
   asiFrequency: string;
   suforVolume: string;
   suforFrequency: string;
+  residuVolume: string;
   // Meds detail
   medsVolume: string;
   medsFrequency: string; 
@@ -69,10 +74,15 @@ export default function App() {
     weight: '1.5',
     weightUnit: 'kg',
     totalFluidPerDay: '150',
+    fluidNeedConstant: '90',
+    calorieNeedConstant: '90',
+    enteralMinPer3Hours: '3',
+    enteralMaxPer3Hours: '5',
     asiVolume: '2',
     asiFrequency: '3',
     suforVolume: '0',
     suforFrequency: '3',
+    residuVolume: '0',
     medsVolume: '1',
     medsFrequency: '2',
     aminoDose: '2',
@@ -142,6 +152,30 @@ export default function App() {
     vitalipidVolumeValue: parseNumericInput(inputs.vitalipidVolume),
   }), [inputs.soluvitVolume, inputs.vitalipidVolume]);
 
+  const calibrationSummary = useMemo(() => {
+    const weightInKg = inputs.weightUnit === 'g'
+      ? parseNumericInput(inputs.weight) / 1000
+      : parseNumericInput(inputs.weight);
+    const fluidNeed = parseNumericInput(inputs.fluidNeedConstant) * weightInKg;
+    const calorieNeed = parseNumericInput(inputs.calorieNeedConstant) * weightInKg;
+    const enteralMin24h = parseNumericInput(inputs.enteralMinPer3Hours) * 8;
+    const enteralMax24h = parseNumericInput(inputs.enteralMaxPer3Hours) * 8;
+
+    return {
+      fluidNeed,
+      calorieNeed,
+      enteralMin24h,
+      enteralMax24h,
+    };
+  }, [
+    inputs.weight,
+    inputs.weightUnit,
+    inputs.fluidNeedConstant,
+    inputs.calorieNeedConstant,
+    inputs.enteralMinPer3Hours,
+    inputs.enteralMaxPer3Hours,
+  ]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     const normalizedValue = value.replace(/,/g, '.');
@@ -156,10 +190,15 @@ export default function App() {
       weight: '1.5',
       weightUnit: 'kg',
       totalFluidPerDay: '150',
+      fluidNeedConstant: '90',
+      calorieNeedConstant: '90',
+      enteralMinPer3Hours: '3',
+      enteralMaxPer3Hours: '5',
       asiVolume: '2',
       asiFrequency: '3',
       suforVolume: '0',
       suforFrequency: '3',
+      residuVolume: '0',
       medsVolume: '1',
       medsFrequency: '2',
       aminoDose: '2',
@@ -181,10 +220,15 @@ export default function App() {
       weight: '',
       weightUnit: 'kg',
       totalFluidPerDay: '',
+      fluidNeedConstant: '',
+      calorieNeedConstant: '',
+      enteralMinPer3Hours: '',
+      enteralMaxPer3Hours: '',
       asiVolume: '',
       asiFrequency: '',
       suforVolume: '',
       suforFrequency: '',
+      residuVolume: '',
       medsVolume: '',
       medsFrequency: '',
       aminoDose: '',
@@ -325,6 +369,57 @@ export default function App() {
                     </span>
                   </div>
                 </div>
+
+                <div className="space-y-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Kalibrasi Kebutuhan</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <InputGroup
+                      label="Konstanta Cairan"
+                      name="fluidNeedConstant"
+                      value={inputs.fluidNeedConstant}
+                      onChange={handleInputChange}
+                      step={1}
+                      unit="ml/kg"
+                    />
+                    <InputGroup
+                      label="Konstanta Kalori"
+                      name="calorieNeedConstant"
+                      value={inputs.calorieNeedConstant}
+                      onChange={handleInputChange}
+                      step={1}
+                      unit="kkal/kg"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <InputGroup
+                      label="Enteral Min (/3 jam)"
+                      name="enteralMinPer3Hours"
+                      value={inputs.enteralMinPer3Hours}
+                      onChange={handleInputChange}
+                      step={0.1}
+                      unit="ml"
+                    />
+                    <InputGroup
+                      label="Enteral Max (/3 jam)"
+                      name="enteralMaxPer3Hours"
+                      value={inputs.enteralMaxPer3Hours}
+                      onChange={handleInputChange}
+                      step={0.1}
+                      unit="ml"
+                    />
+                  </div>
+                  <div className="space-y-1 text-[10px] font-bold">
+                    <p className="text-slate-600">
+                      Kebutuhan cairan: {parseNumericInput(inputs.fluidNeedConstant).toFixed(0)} x {(results.weightInKg || 0).toFixed(2)} = <span className="text-emerald-600">{(calibrationSummary.fluidNeed || 0).toFixed(1)} ml/hari</span>
+                    </p>
+                    <p className="text-slate-600">
+                      Kebutuhan kalori: {parseNumericInput(inputs.calorieNeedConstant).toFixed(0)} x {(results.weightInKg || 0).toFixed(2)} = <span className="text-emerald-600">{(calibrationSummary.calorieNeed || 0).toFixed(1)} kkal/hari</span>
+                    </p>
+                    <p className="text-slate-600">
+                      Kebutuhan enteral: {parseNumericInput(inputs.enteralMinPer3Hours).toFixed(1)} - {parseNumericInput(inputs.enteralMaxPer3Hours).toFixed(1)} ml/3 jam = <span className="text-emerald-600">{(calibrationSummary.enteralMin24h || 0).toFixed(1)} - {(calibrationSummary.enteralMax24h || 0).toFixed(1)} ml/24 jam</span>
+                    </p>
+                  </div>
+                </div>
                 
                 <div className="grid grid-cols-2 gap-4 pt-2">
                   <div className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 relative">
@@ -394,7 +489,23 @@ export default function App() {
                       </div>
                       <p className="text-[10px] text-slate-500 font-bold">Total Sufor: {(results.totalSuforOral || 0).toFixed(1)} ml</p>
                     </div>
+                    <div className="space-y-2 p-2 bg-white rounded-xl border border-slate-200">
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Residu</p>
+                      <div className="flex items-center gap-2">
+                        <input 
+                          type="number" 
+                          name="residuVolume" 
+                          value={inputs.residuVolume} 
+                          onChange={handleInputChange}
+                          placeholder="0"
+                          className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-sm font-bold focus:ring-2 focus:ring-emerald-500/20 outline-none"
+                        />
+                        <span className="text-xs text-slate-400 font-medium">cc</span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 font-bold">Residu: {(parseNumericInput(inputs.residuVolume) || 0).toFixed(1)} ml</p>
+                    </div>
                     <p className="text-[10px] text-emerald-600 font-bold mt-1">Total: {(results.totalOral || 0).toFixed(1)} ml</p>
+                    <p className="text-[10px] text-rose-500 font-bold">Muntah: 0 ml</p>
                   </div>
 
                   <div className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
