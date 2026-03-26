@@ -36,6 +36,7 @@ interface TPNInputs {
   asiFrequency: string;
   suforVolume: string;
   suforFrequency: string;
+  residuVolume: string;
   // Meds detail
   medsVolume: string;
   medsFrequency: string; 
@@ -73,6 +74,7 @@ export default function App() {
     asiFrequency: '3',
     suforVolume: '0',
     suforFrequency: '3',
+    residuVolume: '0',
     medsVolume: '1',
     medsFrequency: '2',
     aminoDose: '2',
@@ -160,6 +162,7 @@ export default function App() {
       asiFrequency: '3',
       suforVolume: '0',
       suforFrequency: '3',
+      residuVolume: '0',
       medsVolume: '1',
       medsFrequency: '2',
       aminoDose: '2',
@@ -185,6 +188,7 @@ export default function App() {
       asiFrequency: '',
       suforVolume: '',
       suforFrequency: '',
+      residuVolume: '',
       medsVolume: '',
       medsFrequency: '',
       aminoDose: '',
@@ -394,7 +398,23 @@ export default function App() {
                       </div>
                       <p className="text-[10px] text-slate-500 font-bold">Total Sufor: {(results.totalSuforOral || 0).toFixed(1)} ml</p>
                     </div>
+                    <div className="space-y-2 p-2 bg-white rounded-xl border border-slate-200">
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Residu</p>
+                      <div className="flex items-center gap-2">
+                        <input 
+                          type="number" 
+                          name="residuVolume" 
+                          value={inputs.residuVolume} 
+                          onChange={handleInputChange}
+                          placeholder="0"
+                          className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-sm font-bold focus:ring-2 focus:ring-emerald-500/20 outline-none"
+                        />
+                        <span className="text-xs text-slate-400 font-medium">cc</span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 font-bold">Residu: {(parseNumericInput(inputs.residuVolume) || 0).toFixed(1)} ml</p>
+                    </div>
                     <p className="text-[10px] text-emerald-600 font-bold mt-1">Total: {(results.totalOral || 0).toFixed(1)} ml</p>
+                    <p className="text-[10px] text-rose-500 font-bold">Muntah: 0 ml</p>
                   </div>
 
                   <div className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
