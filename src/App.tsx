@@ -25,6 +25,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { calculateTPN, TPNCalculationInputs } from './services/tpnService';
 import { MilkReferenceModal } from './components/MilkReferenceModal';
 import { IcuCalculatorModal } from './components/IcuCalculatorModal';
+import { RdaCalculatorModal } from './components/RdaCalculatorModal';
 
 // Types
 interface TPNInputs {
@@ -70,6 +71,7 @@ const parseNumericInput = (value: string): number => {
 export default function App() {
   const [isMilkModalOpen, setIsMilkModalOpen] = useState(false);
   const [isIcuModalOpen, setIsIcuModalOpen] = useState(false);
+  const [isRdaModalOpen, setIsRdaModalOpen] = useState(false);
   const [inputs, setInputs] = useState<TPNInputs>({
     weight: '1.5',
     weightUnit: 'kg',
@@ -305,6 +307,14 @@ export default function App() {
               >
                 <Activity size={14} />
                 Kalkulator ICU
+              </button>
+              <button
+                onClick={() => setIsRdaModalOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-all"
+                title="Kalkulator Kebutuhan Nutrisi Harian (RDA)"
+              >
+                <Baby size={14} />
+                Kalkulator RDA
               </button>
             </div>
           </div>
@@ -948,6 +958,10 @@ export default function App() {
       <IcuCalculatorModal
         isOpen={isIcuModalOpen}
         onClose={() => setIsIcuModalOpen(false)}
+      />
+      <RdaCalculatorModal
+        isOpen={isRdaModalOpen}
+        onClose={() => setIsRdaModalOpen(false)}
       />
     </div>
   );
