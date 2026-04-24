@@ -50,15 +50,64 @@ function getRdaRow(age: number, gender: Gender): RdaRow | null {
   return { label: 'Remaja Perempuan (15 – 18 tahun)', kcalPerKg: 40, proteinPerKg: 0.8, fluidMin: 50, fluidMax: 60 };
 }
 
+// ── Waterlow helpers ──────────────────────────────────────────────────────────
+
+interface WaterlowResult {
+  value: number;
+  label: string;
+  clinical: string;
+  colorClass: string;
+  badgeColorClass: string;
+}
+
+function getWaterlow(bb: number, bbi: number): WaterlowResult {
+  const value = (bb / bbi) * 100;
+  if (value > 90) {
+    return {
+      value,
+      label: 'Gizi Baik',
+      clinical: 'Normal / well-nourished',
+      colorClass: 'bg-emerald-50 border-emerald-200',
+      badgeColorClass: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    };
+  }
+  if (value >= 81) {
+    return {
+      value,
+      label: 'Gizi Sedang',
+      clinical: 'Mild malnutrition',
+      colorClass: 'bg-yellow-50 border-yellow-200',
+      badgeColorClass: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+    };
+  }
+  if (value >= 71) {
+    return {
+      value,
+      label: 'Gizi Kurang',
+      clinical: 'Moderate malnutrition',
+      colorClass: 'bg-orange-50 border-orange-200',
+      badgeColorClass: 'bg-orange-100 text-orange-700 border-orange-200',
+    };
+  }
+  return {
+    value,
+    label: 'Gizi Buruk',
+    clinical: 'Severe malnutrition',
+    colorClass: 'bg-rose-50 border-rose-200',
+    badgeColorClass: 'bg-rose-100 text-rose-700 border-rose-200',
+  };
+}
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface RdaInputs {
   age: string;
   gender: Gender;
   bbi: string;
+  bb: string;
 }
 
-const EMPTY_INPUTS: RdaInputs = { age: '', gender: 'male', bbi: '' };
+const EMPTY_INPUTS: RdaInputs = { age: '', gender: 'male', bbi: '', bb: '' };
 
 const parseNum = (v: string) => {
   const n = parseFloat(v.replace(',', '.'));
@@ -75,6 +124,7 @@ interface Props {
 export function RdaCalculatorModal({ isOpen, onClose }: Props) {
   const [inputs, setInputs] = useState<RdaInputs>(EMPTY_INPUTS);
   const [showRefImage, setShowRefImage] = useState(false);
+  const [showWaterlowRefImage, setShowWaterlowRefImage] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -86,6 +136,7 @@ export function RdaCalculatorModal({ isOpen, onClose }: Props) {
   const result = useMemo(() => {
     const age = parseNum(inputs.age);
     const bbi = parseNum(inputs.bbi);
+    const bb = parseNum(inputs.bb);
 
     if (inputs.age.trim() === '' || inputs.bbi.trim() === '') return { type: 'empty' as const };
     if (Number.isNaN(age) || Number.isNaN(bbi)) return { type: 'invalid' as const };
@@ -100,14 +151,22 @@ export function RdaCalculatorModal({ isOpen, onClose }: Props) {
     const cairanMin = bbi * row.fluidMin;
     const cairanMax = bbi * row.fluidMax;
 
+    // Waterlow – only computed when BB is provided and valid
+    const waterlowData =
+      inputs.bb.trim() !== '' && !Number.isNaN(bb) && bb > 0
+        ? getWaterlow(bb, bbi)
+        : null;
+
     return {
       type: 'ok' as const,
       row,
       bbi,
+      bb: inputs.bb.trim() !== '' && !Number.isNaN(bb) ? bb : null,
       kalori,
       protein,
       cairanMin,
       cairanMax,
+      waterlowData,
     };
   }, [inputs]);
 
@@ -162,7 +221,7 @@ export function RdaCalculatorModal({ isOpen, onClose }: Props) {
             <div className="p-6 md:p-8 overflow-y-auto space-y-6">
 
               {/* ── Reference Image toggle ── */}
-              <div>
+              <div className="space-y-3">
                 <button
                   onClick={() => setShowRefImage(v => !v)}
                   className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-emerald-600 transition-colors"
@@ -176,7 +235,7 @@ export function RdaCalculatorModal({ isOpen, onClose }: Props) {
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="overflow-hidden mt-3"
+                      className="overflow-hidden"
                     >
                       <img
                         src="https://github.com/user-attachments/assets/93189188-e226-4a0e-bc52-19184aabb958"
@@ -190,13 +249,41 @@ export function RdaCalculatorModal({ isOpen, onClose }: Props) {
                     </motion.div>
                   )}
                 </AnimatePresence>
+
+                <button
+                  onClick={() => setShowWaterlowRefImage(v => !v)}
+                  className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-emerald-600 transition-colors"
+                >
+                  <ImageIcon size={14} />
+                  {showWaterlowRefImage ? 'Sembunyikan' : 'Tampilkan'} Tabel Referensi Waterlow
+                </button>
+                <AnimatePresence>
+                  {showWaterlowRefImage && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <img
+                        src="https://github.com/user-attachments/assets/f290b711-26d5-4e10-969b-7093f86709b5"
+                        alt="Tabel Status Gizi berdasarkan Waterlow Index"
+                        className="w-full rounded-2xl border border-slate-200 shadow-sm object-contain"
+                        style={{ imageRendering: 'crisp-edges' }}
+                      />
+                      <p className="text-[10px] text-slate-400 font-medium mt-2 text-center">
+                        Tabel Klasifikasi Status Gizi berdasarkan Waterlow Index
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* ── Inputs ── */}
               <section className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-5">
                 <h3 className="text-sm font-bold text-slate-700">Data Pasien</h3>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Age */}
                   <div>
                     <label className={labelCls}>Umur (tahun)</label>
@@ -252,6 +339,22 @@ export function RdaCalculatorModal({ isOpen, onClose }: Props) {
                       className={inputCls}
                     />
                     <p className="text-[10px] text-slate-400 mt-1 font-medium">Berat Badan Ideal</p>
+                  </div>
+
+                  {/* BB Aktual */}
+                  <div>
+                    <label className={labelCls}>BB Aktual (kg)</label>
+                    <input
+                      type="number"
+                      name="bb"
+                      value={inputs.bb}
+                      onChange={handleChange}
+                      placeholder="0"
+                      min={0}
+                      step={0.1}
+                      className={inputCls}
+                    />
+                    <p className="text-[10px] text-slate-400 mt-1 font-medium">Berat Badan Aktual (untuk Waterlow)</p>
                   </div>
                 </div>
               </section>
@@ -339,6 +442,54 @@ export function RdaCalculatorModal({ isOpen, onClose }: Props) {
                       </div>
                     </div>
 
+                    {/* ── Waterlow section ── */}
+                    {result.waterlowData ? (
+                      <div className={`border rounded-2xl p-6 ${result.waterlowData.colorClass}`}>
+                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">
+                          Status Gizi (Waterlow Index)
+                        </p>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                          <div className="flex-1 text-center">
+                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                              Nilai Waterlow
+                            </p>
+                            <p className="text-4xl font-black text-slate-800 tracking-tight">
+                              {result.waterlowData.value.toFixed(1)}
+                              <span className="text-xl font-bold text-slate-500 ml-1">%</span>
+                            </p>
+                            <p className="text-[10px] text-slate-400 mt-1 font-medium">
+                              {result.bb} kg ÷ {result.bbi} kg × 100
+                            </p>
+                          </div>
+                          <div className="flex-1 text-center">
+                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+                              Interpretasi
+                            </p>
+                            <span className={`inline-block text-sm font-black px-4 py-2 rounded-xl border ${result.waterlowData.badgeColorClass}`}>
+                              {result.waterlowData.label}
+                            </span>
+                            <p className="text-[11px] text-slate-500 mt-2 font-medium italic">
+                              {result.waterlowData.clinical}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : inputs.bb.trim() !== '' ? (
+                      <div className="flex items-start gap-3 bg-rose-50 border border-rose-200 rounded-2xl p-5">
+                        <AlertCircle size={18} className="text-rose-500 mt-0.5 shrink-0" />
+                        <p className="text-sm text-rose-700 font-medium">
+                          BB Aktual harus lebih dari 0 untuk menghitung Waterlow.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="flex items-start gap-3 bg-slate-50 border border-slate-200 rounded-2xl p-5">
+                        <AlertCircle size={18} className="text-slate-400 mt-0.5 shrink-0" />
+                        <p className="text-sm text-slate-500 font-medium">
+                          Masukkan <strong>BB Aktual</strong> untuk melihat Status Gizi (Waterlow).
+                        </p>
+                      </div>
+                    )}
+
                     {/* Clinical summary */}
                     <div className="bg-slate-900 rounded-2xl p-6 text-white font-mono text-sm leading-relaxed">
                       <p className="text-emerald-400 font-bold text-xs uppercase tracking-widest mb-4">
@@ -362,6 +513,29 @@ export function RdaCalculatorModal({ isOpen, onClose }: Props) {
                             {result.cairanMin.toFixed(0)} – {result.cairanMax.toFixed(0)} ml/hari
                           </span>
                         </p>
+                        {result.waterlowData && (
+                          <>
+                            <div className="border-t border-slate-700 my-2" />
+                            <p className="text-emerald-400 font-bold text-xs uppercase tracking-widest mb-2">
+                              Status Gizi (Waterlow)
+                            </p>
+                            <p>
+                              <span className="text-slate-400 w-28 inline-block">- Waterlow</span>
+                              <span className="text-white">: </span>
+                              <span className="text-purple-400 font-bold">{result.waterlowData.value.toFixed(1)} %</span>
+                            </p>
+                            <p>
+                              <span className="text-slate-400 w-28 inline-block">- Status</span>
+                              <span className="text-white">: </span>
+                              <span className="text-purple-400 font-bold">{result.waterlowData.label}</span>
+                            </p>
+                            <p>
+                              <span className="text-slate-400 w-28 inline-block">- Klinis</span>
+                              <span className="text-white">: </span>
+                              <span className="text-purple-300 font-medium">{result.waterlowData.clinical}</span>
+                            </p>
+                          </>
+                        )}
                       </div>
                     </div>
                   </motion.div>
