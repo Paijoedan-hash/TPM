@@ -194,7 +194,7 @@ export function RdaCalculatorModal({ isOpen, onClose }: Props) {
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl max-h-[92vh] overflow-hidden bg-white rounded-[2rem] shadow-2xl z-50 flex flex-col"
+            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-1rem)] sm:w-full max-w-2xl max-h-[92vh] overflow-hidden bg-white rounded-[2rem] shadow-2xl z-50 flex flex-col"
           >
             {/* Header */}
             <div className="p-6 md:p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
@@ -203,8 +203,8 @@ export function RdaCalculatorModal({ isOpen, onClose }: Props) {
                   <Baby size={20} />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-slate-800">Kalkulator Kebutuhan Nutrisi Harian</h2>
-                  <p className="text-sm text-slate-500 font-medium mt-0.5">
+                  <h2 className="text-base md:text-xl font-bold text-slate-800">Kalkulator Kebutuhan Nutrisi Harian</h2>
+                  <p className="text-xs md:text-sm text-slate-500 font-medium mt-0.5">
                     RDA Bayi & Anak berdasarkan Umur, Jenis Kelamin, dan BBI
                   </p>
                 </div>

@@ -51,7 +51,7 @@ export function MilkReferenceModal({ isOpen, onClose }: Props) {
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl max-h-[90vh] overflow-hidden bg-white rounded-[2rem] shadow-2xl z-50 flex flex-col"
+            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-1rem)] sm:w-full max-w-4xl max-h-[90vh] overflow-hidden bg-white rounded-[2rem] shadow-2xl z-50 flex flex-col"
           >
             <div className="p-6 md:p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
               <div>

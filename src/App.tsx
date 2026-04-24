@@ -251,7 +251,7 @@ export default function App() {
     <div className="min-h-screen bg-[#f8fafc] text-slate-900 font-sans p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <header className="mb-6 md:mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 bg-emerald-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-emerald-200">
               <Calculator size={32} />
@@ -262,7 +262,7 @@ export default function App() {
             </div>
           </div>
           
-          <div className="flex items-center gap-3 bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm">
+          <div className="flex flex-wrap items-center gap-2 bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm">
             <button 
               onClick={() => setUseSmartRounding(true)}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
@@ -283,40 +283,38 @@ export default function App() {
             >
               Presisi
             </button>
-            <div className="w-px h-6 bg-slate-200 mx-1" />
-            <div className="flex items-center gap-1">
-              <button 
-                onClick={resetInputs}
-                className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all"
-                title="Reset ke Default"
-              >
-                <RefreshCcw size={18} />
-              </button>
-              <button 
-                onClick={clearInputs}
-                className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
-                title="Kosongkan Semua (0)"
-              >
-                <Trash2 size={18} />
-              </button>
-              <div className="w-px h-6 bg-slate-200 mx-1" />
-              <button
-                onClick={() => setIsIcuModalOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-all"
-                title="Kalkulator ICU"
-              >
-                <Activity size={14} />
-                Kalkulator ICU
-              </button>
-              <button
-                onClick={() => setIsRdaModalOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-all"
-                title="Kalkulator Kebutuhan Nutrisi Harian (RDA)"
-              >
-                <Baby size={14} />
-                Kalkulator RDA
-              </button>
-            </div>
+            <div className="hidden sm:block w-px h-6 bg-slate-200 mx-1" />
+            <button 
+              onClick={resetInputs}
+              className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all"
+              title="Reset ke Default"
+            >
+              <RefreshCcw size={18} />
+            </button>
+            <button 
+              onClick={clearInputs}
+              className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+              title="Kosongkan Semua (0)"
+            >
+              <Trash2 size={18} />
+            </button>
+            <div className="hidden sm:block w-px h-6 bg-slate-200 mx-1" />
+            <button
+              onClick={() => setIsIcuModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-all"
+              title="Kalkulator ICU"
+            >
+              <Activity size={14} />
+              Kalkulator ICU
+            </button>
+            <button
+              onClick={() => setIsRdaModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-all"
+              title="Kalkulator Kebutuhan Nutrisi Harian (RDA)"
+            >
+              <Baby size={14} />
+              Kalkulator RDA
+            </button>
           </div>
         </header>
 
@@ -324,7 +322,7 @@ export default function App() {
           {/* LEFT COLUMN: INPUTS */}
           <div className="lg:col-span-5 space-y-6">
             {/* Patient Info */}
-            <section className="bg-white rounded-[2rem] p-8 shadow-sm border border-slate-200/60">
+            <section className="bg-white rounded-[2rem] p-5 md:p-8 shadow-sm border border-slate-200/60">
               <div className="flex items-center gap-3 mb-8">
                 <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
                   <Baby size={20} />
@@ -431,7 +429,7 @@ export default function App() {
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4 pt-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                   <div className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 relative">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -549,7 +547,7 @@ export default function App() {
             </section>
 
             {/* Nutrition Parameters */}
-            <section className="bg-white rounded-[2rem] p-8 shadow-sm border border-slate-200/60">
+            <section className="bg-white rounded-[2rem] p-5 md:p-8 shadow-sm border border-slate-200/60">
               <div className="flex items-center gap-3 mb-8">
                 <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
                   <FlaskConical size={20} />
@@ -607,7 +605,7 @@ export default function App() {
                   />
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <InputGroup label="Glikofosfat" name="glikofosfatDose" value={inputs.glikofosfatDose} onChange={handleInputChange} unit="ml/kg" step={0.1} />
                   <InputGroup label="Soluvit" name="soluvitVolume" value={inputs.soluvitVolume} onChange={handleInputChange} unit="ml" />
                   <InputGroup label="Vitalipid" name="vitalipidVolume" value={inputs.vitalipidVolume} onChange={handleInputChange} unit="ml" />
@@ -787,13 +785,13 @@ export default function App() {
                 key={JSON.stringify(results)}
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="bg-slate-900 rounded-[2.5rem] p-10 text-white shadow-2xl relative overflow-hidden"
+                className="bg-slate-900 rounded-[2.5rem] p-5 md:p-10 text-white shadow-2xl relative overflow-hidden"
               >
                 {/* Visual Accents */}
                 <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full -mr-48 -mt-48 blur-[100px] pointer-events-none" />
                 
                 <div className="relative z-10">
-                  <div className="flex items-center justify-between mb-12">
+                  <div className="flex items-center justify-between mb-6 md:mb-12">
                     <div className="flex items-center gap-2 px-4 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
                       <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
                       <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">Hasil Kalkulasi TPN</span>
@@ -801,14 +799,14 @@ export default function App() {
                   </div>
 
                   {/* Main Stats */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-12">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 md:gap-10 mb-6 md:mb-12">
                     <ResultStat label="Main Infusion" value={results.mainInfusionVolume} unit="ml/hari" />
                     <ResultStat label="Tetesan Utama" value={results.mainRatePerHour} unit="cc/jam" />
                     <ResultStat label="Dextrose %" value={results.dPercent} unit="%" color="text-emerald-400" />
                   </div>
 
                   {/* Detailed Composition */}
-                  <div className="space-y-10 mb-12">
+                  <div className="space-y-6 md:space-y-10 mb-6 md:mb-12">
                     {/* Block 1: Main Infusion */}
                     <div className="space-y-4">
                       <div className="flex items-center gap-2">
@@ -850,13 +848,13 @@ export default function App() {
                   </div>
 
                   {/* Final Equation */}
-                  <div className="bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-sm">
+                  <div className="bg-white/5 border border-white/10 rounded-3xl p-5 md:p-8 backdrop-blur-sm">
                     <div className="flex items-center gap-2 mb-6">
                       <ClipboardCheck size={16} className="text-emerald-400" />
                       <h4 className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Format Peresepan (Moewardi)</h4>
                     </div>
                     
-                    <div className="font-mono text-sm md:text-base leading-relaxed text-slate-100 space-y-6">
+                    <div className="font-mono text-xs md:text-sm leading-relaxed text-slate-100 space-y-6">
                       <div>
                         <p className="text-emerald-400 font-bold mb-2 uppercase tracking-wider">1. INFUS UTAMA (D {(results.dPercent || 0).toFixed(1)}%, GIR {inputs.gir})</p>
                         <p className="bg-white/5 p-4 rounded-2xl border border-white/10 text-sm md:text-base">
@@ -910,7 +908,7 @@ export default function App() {
                 </motion.div>
               )}
 
-              <div className="bg-white rounded-[2rem] p-8 border border-slate-200/60 shadow-sm">
+              <div className="bg-white rounded-[2rem] p-5 md:p-8 border border-slate-200/60 shadow-sm">
                 <div className="flex items-center gap-2 mb-6">
                   <Info size={18} className="text-emerald-600" />
                   <h3 className="text-sm font-bold text-slate-800">Catatan Nutrisi</h3>
