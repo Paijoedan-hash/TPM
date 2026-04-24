@@ -458,7 +458,7 @@ export function RdaCalculatorModal({ isOpen, onClose }: Props) {
                               <span className="text-xl font-bold text-slate-500 ml-1">%</span>
                             </p>
                             <p className="text-[10px] text-slate-400 mt-1 font-medium">
-                              {result.bb} kg ÷ {result.bbi} kg × 100
+                              {(result.bb as number).toFixed(1)} kg ÷ {result.bbi.toFixed(1)} kg × 100
                             </p>
                           </div>
                           <div className="flex-1 text-center">
