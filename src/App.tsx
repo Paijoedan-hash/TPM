@@ -71,6 +71,7 @@ interface PatientHistoryItem {
 }
 
 const HISTORY_STORAGE_KEY = 'neo-tpn-patient-history';
+const MAX_HISTORY_SIZE = 10;
 
 const DEFAULT_INPUTS: TPNInputs = {
   weight: '1.5',
@@ -275,15 +276,18 @@ export default function App() {
   };
 
   const saveCurrentPatient = () => {
-    const defaultPatientName = `Pasien ${new Date().toLocaleDateString('id-ID')}`;
+    const fallbackPatientName = `Pasien ${new Date().toLocaleDateString('id-ID')}`;
+    const historyId = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const item: PatientHistoryItem = {
-      id: `${Date.now()}`,
-      name: patientName.trim() || defaultPatientName,
+      id: historyId,
+      name: patientName.trim() || fallbackPatientName,
       savedAt: new Date().toISOString(),
       inputs,
       useSmartRounding
     };
-    setHistory(prev => [item, ...prev].slice(0, 10));
+    setHistory(prev => [item, ...prev].slice(0, MAX_HISTORY_SIZE));
   };
 
   const loadPatientHistory = (item: PatientHistoryItem) => {
