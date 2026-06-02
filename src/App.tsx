@@ -275,10 +275,10 @@ export default function App() {
   };
 
   const saveCurrentPatient = () => {
-    const fallbackName = `Pasien ${new Date().toLocaleDateString('id-ID')}`;
+    const defaultPatientName = `Pasien ${new Date().toLocaleDateString('id-ID')}`;
     const item: PatientHistoryItem = {
       id: `${Date.now()}`,
-      name: patientName.trim() || fallbackName,
+      name: patientName.trim() || defaultPatientName,
       savedAt: new Date().toISOString(),
       inputs,
       useSmartRounding
@@ -436,7 +436,7 @@ export default function App() {
                         >
                           <p className="text-xs font-bold text-slate-800">{item.name}</p>
                           <p className="text-[10px] text-slate-500">
-                            BB {item.inputs.weight || 0} {item.inputs.weightUnit} • {new Date(item.savedAt).toLocaleString('id-ID')}
+                            BB {item.inputs.weight || '-'} {item.inputs.weightUnit} • {new Date(item.savedAt).toLocaleString('id-ID')}
                           </p>
                         </button>
                       ))}
