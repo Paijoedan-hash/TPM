@@ -62,6 +62,72 @@ interface TPNInputs {
   baseFluidType: 'D5 1/4 NS' | 'D5 1/2 NS';
 }
 
+interface PatientHistoryItem {
+  id: string;
+  name: string;
+  savedAt: string;
+  inputs: TPNInputs;
+  useSmartRounding: boolean;
+}
+
+const HISTORY_STORAGE_KEY = 'neo-tpn-patient-history';
+
+const DEFAULT_INPUTS: TPNInputs = {
+  weight: '1.5',
+  weightUnit: 'kg',
+  totalFluidPerDay: '150',
+  fluidNeedConstant: '90',
+  calorieNeedConstant: '90',
+  enteralMinPer3Hours: '3',
+  enteralMaxPer3Hours: '5',
+  asiVolume: '2',
+  asiFrequency: '3',
+  suforVolume: '0',
+  suforFrequency: '3',
+  residuVolume: '0',
+  medsVolume: '1',
+  medsFrequency: '2',
+  aminoDose: '2',
+  aminoConcentration: 10,
+  lipidDose: '1',
+  balanceCairan: '',
+  glikofosfatDose: '1',
+  soluvitVolume: '',
+  vitalipidVolume: '',
+  gir: '4',
+  caDose: '2',
+  kclDose: '1',
+  baseFluidType: 'D5 1/4 NS',
+};
+
+const EMPTY_INPUTS: TPNInputs = {
+  weight: '',
+  weightUnit: 'kg',
+  totalFluidPerDay: '',
+  fluidNeedConstant: '',
+  calorieNeedConstant: '',
+  enteralMinPer3Hours: '',
+  enteralMaxPer3Hours: '',
+  asiVolume: '',
+  asiFrequency: '',
+  suforVolume: '',
+  suforFrequency: '',
+  residuVolume: '',
+  medsVolume: '',
+  medsFrequency: '',
+  aminoDose: '',
+  aminoConcentration: 10,
+  lipidDose: '',
+  balanceCairan: '',
+  glikofosfatDose: '',
+  soluvitVolume: '',
+  vitalipidVolume: '',
+  gir: '',
+  caDose: '',
+  kclDose: '',
+  baseFluidType: 'D5 1/4 NS',
+};
+
 const parseNumericInput = (value: string): number => {
   const normalizedValue = value.trim().replace(/,/g, '.');
   const parsedValue = Number(normalizedValue);
@@ -72,34 +138,11 @@ export default function App() {
   const [isMilkModalOpen, setIsMilkModalOpen] = useState(false);
   const [isIcuModalOpen, setIsIcuModalOpen] = useState(false);
   const [isRdaModalOpen, setIsRdaModalOpen] = useState(false);
-  const [inputs, setInputs] = useState<TPNInputs>({
-    weight: '1.5',
-    weightUnit: 'kg',
-    totalFluidPerDay: '150',
-    fluidNeedConstant: '90',
-    calorieNeedConstant: '90',
-    enteralMinPer3Hours: '3',
-    enteralMaxPer3Hours: '5',
-    asiVolume: '2',
-    asiFrequency: '3',
-    suforVolume: '0',
-    suforFrequency: '3',
-    residuVolume: '0',
-    medsVolume: '1',
-    medsFrequency: '2',
-    aminoDose: '2',
-    aminoConcentration: 10,
-    lipidDose: '1',
-    balanceCairan: '',
-    glikofosfatDose: '1',
-    soluvitVolume: '',
-    vitalipidVolume: '',
-    gir: '4',
-    caDose: '2',
-    kclDose: '1',
-    baseFluidType: 'D5 1/4 NS',
-  });
-
+  const [inputs, setInputs] = useState<TPNInputs>(DEFAULT_INPUTS);
+  const [calculatedInputs, setCalculatedInputs] = useState<TPNInputs>(DEFAULT_INPUTS);
+  const [isAutoCalculate, setIsAutoCalculate] = useState(true);
+  const [patientName, setPatientName] = useState('');
+  const [history, setHistory] = useState<PatientHistoryItem[]>([]);
   const [useSmartRounding, setUseSmartRounding] = useState(true);
 
   // Darrow (Holliday-Segar) Formula
@@ -120,34 +163,63 @@ export default function App() {
     }
   }, [inputs.weight, inputs.weightUnit]);
 
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem(HISTORY_STORAGE_KEY);
+      if (!cached) return;
+      const parsed = JSON.parse(cached);
+      if (!Array.isArray(parsed)) return;
+      const validItems = parsed.filter(item =>
+        item &&
+        typeof item.id === 'string' &&
+        typeof item.name === 'string' &&
+        typeof item.savedAt === 'string' &&
+        item.inputs
+      );
+      setHistory(validItems);
+    } catch {
+      setHistory([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
+  }, [history]);
+
+  useEffect(() => {
+    if (isAutoCalculate) {
+      setCalculatedInputs(inputs);
+    }
+  }, [inputs, isAutoCalculate]);
+
   // Calculations
   const results = useMemo(() => {
     const calculationInputs: TPNCalculationInputs = {
-      weight: parseNumericInput(inputs.weight),
-      weightUnit: inputs.weightUnit,
-      totalFluidPerDay: parseNumericInput(inputs.totalFluidPerDay),
-      asiVolume: parseNumericInput(inputs.asiVolume),
-      asiFrequency: parseNumericInput(inputs.asiFrequency),
-      suforVolume: parseNumericInput(inputs.suforVolume),
-      suforFrequency: parseNumericInput(inputs.suforFrequency),
-      medsVolume: parseNumericInput(inputs.medsVolume),
-      medsFrequency: parseNumericInput(inputs.medsFrequency),
-      aminoDose: parseNumericInput(inputs.aminoDose),
-      aminoConcentration: inputs.aminoConcentration,
-      lipidDose: parseNumericInput(inputs.lipidDose),
-      balanceCairan: parseNumericInput(inputs.balanceCairan),
-      glikofosfatDose: parseNumericInput(inputs.glikofosfatDose),
-      soluvitVolume: parseNumericInput(inputs.soluvitVolume),
-      vitalipidVolume: parseNumericInput(inputs.vitalipidVolume),
-      gir: parseNumericInput(inputs.gir),
-      caDose: parseNumericInput(inputs.caDose),
-      kclDose: parseNumericInput(inputs.kclDose),
-      baseFluidType: inputs.baseFluidType,
+      weight: parseNumericInput(calculatedInputs.weight),
+      weightUnit: calculatedInputs.weightUnit,
+      totalFluidPerDay: parseNumericInput(calculatedInputs.totalFluidPerDay),
+      asiVolume: parseNumericInput(calculatedInputs.asiVolume),
+      asiFrequency: parseNumericInput(calculatedInputs.asiFrequency),
+      suforVolume: parseNumericInput(calculatedInputs.suforVolume),
+      suforFrequency: parseNumericInput(calculatedInputs.suforFrequency),
+      medsVolume: parseNumericInput(calculatedInputs.medsVolume),
+      medsFrequency: parseNumericInput(calculatedInputs.medsFrequency),
+      aminoDose: parseNumericInput(calculatedInputs.aminoDose),
+      aminoConcentration: calculatedInputs.aminoConcentration,
+      lipidDose: parseNumericInput(calculatedInputs.lipidDose),
+      balanceCairan: parseNumericInput(calculatedInputs.balanceCairan),
+      glikofosfatDose: parseNumericInput(calculatedInputs.glikofosfatDose),
+      soluvitVolume: parseNumericInput(calculatedInputs.soluvitVolume),
+      vitalipidVolume: parseNumericInput(calculatedInputs.vitalipidVolume),
+      gir: parseNumericInput(calculatedInputs.gir),
+      caDose: parseNumericInput(calculatedInputs.caDose),
+      kclDose: parseNumericInput(calculatedInputs.kclDose),
+      baseFluidType: calculatedInputs.baseFluidType,
       useSmartRounding
     };
 
     return calculateTPN(calculationInputs);
-  }, [inputs, useSmartRounding]);
+  }, [calculatedInputs, useSmartRounding]);
 
   const { soluvitVolumeValue, vitalipidVolumeValue } = useMemo(() => ({
     soluvitVolumeValue: parseNumericInput(inputs.soluvitVolume),
@@ -188,63 +260,41 @@ export default function App() {
   };
 
   const resetInputs = () => {
-    setInputs({
-      weight: '1.5',
-      weightUnit: 'kg',
-      totalFluidPerDay: '150',
-      fluidNeedConstant: '90',
-      calorieNeedConstant: '90',
-      enteralMinPer3Hours: '3',
-      enteralMaxPer3Hours: '5',
-      asiVolume: '2',
-      asiFrequency: '3',
-      suforVolume: '0',
-      suforFrequency: '3',
-      residuVolume: '0',
-      medsVolume: '1',
-      medsFrequency: '2',
-      aminoDose: '2',
-      aminoConcentration: 10,
-      lipidDose: '1',
-      balanceCairan: '',
-      glikofosfatDose: '1',
-      soluvitVolume: '',
-      vitalipidVolume: '',
-      gir: '4',
-      caDose: '2',
-      kclDose: '1',
-      baseFluidType: 'D5 1/4 NS',
-    });
+    setInputs(DEFAULT_INPUTS);
+    setCalculatedInputs(DEFAULT_INPUTS);
+    setPatientName('');
   };
 
   const clearInputs = () => {
-    setInputs({
-      weight: '',
-      weightUnit: 'kg',
-      totalFluidPerDay: '',
-      fluidNeedConstant: '',
-      calorieNeedConstant: '',
-      enteralMinPer3Hours: '',
-      enteralMaxPer3Hours: '',
-      asiVolume: '',
-      asiFrequency: '',
-      suforVolume: '',
-      suforFrequency: '',
-      residuVolume: '',
-      medsVolume: '',
-      medsFrequency: '',
-      aminoDose: '',
-      aminoConcentration: 10,
-      lipidDose: '',
-      balanceCairan: '',
-      glikofosfatDose: '',
-      soluvitVolume: '',
-      vitalipidVolume: '',
-      gir: '',
-      caDose: '',
-      kclDose: '',
-      baseFluidType: 'D5 1/4 NS',
-    });
+    setInputs(EMPTY_INPUTS);
+    setCalculatedInputs(EMPTY_INPUTS);
+  };
+
+  const calculateNow = () => {
+    setCalculatedInputs(inputs);
+  };
+
+  const saveCurrentPatient = () => {
+    const fallbackName = `Pasien ${new Date().toLocaleDateString('id-ID')}`;
+    const item: PatientHistoryItem = {
+      id: `${Date.now()}`,
+      name: patientName.trim() || fallbackName,
+      savedAt: new Date().toISOString(),
+      inputs,
+      useSmartRounding
+    };
+    setHistory(prev => [item, ...prev].slice(0, 10));
+  };
+
+  const loadPatientHistory = (item: PatientHistoryItem) => {
+    setInputs(item.inputs);
+    setCalculatedInputs(item.inputs);
+    setUseSmartRounding(item.useSmartRounding);
+    setPatientName(item.name);
+  };
+
+  const clearHistory = () => {
+    setHistory([]);
   };
 
   return (
@@ -263,6 +313,26 @@ export default function App() {
           </div>
           
           <div className="flex flex-wrap items-center gap-2 bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm">
+            <button
+              onClick={() => setIsAutoCalculate(prev => !prev)}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                isAutoCalculate
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-100'
+                  : 'text-slate-500 hover:bg-slate-50'
+              }`}
+              title="Aktifkan/nonaktifkan hitung otomatis"
+            >
+              {isAutoCalculate ? 'Auto Hitung ON' : 'Auto Hitung OFF'}
+            </button>
+            <button
+              onClick={calculateNow}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white shadow-md shadow-emerald-100 hover:bg-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isAutoCalculate}
+              title={isAutoCalculate ? 'Matikan Auto Hitung untuk hitung manual' : 'Hitung sekarang'}
+            >
+              <Calculator size={14} />
+              Hitung
+            </button>
             <button 
               onClick={() => setUseSmartRounding(true)}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
@@ -328,6 +398,51 @@ export default function App() {
                   <Baby size={20} />
                 </div>
                 <h2 className="text-lg font-bold text-slate-800">Data Pasien & Cairan</h2>
+              </div>
+
+              <div className="space-y-3 mb-6">
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input
+                    type="text"
+                    value={patientName}
+                    onChange={(e) => setPatientName(e.target.value)}
+                    placeholder="Nama pasien (opsional)"
+                    className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
+                  />
+                  <button
+                    onClick={saveCurrentPatient}
+                    className="px-4 py-2.5 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-all"
+                  >
+                    Simpan Pasien
+                  </button>
+                </div>
+                {history.length > 0 && (
+                  <div className="space-y-2 bg-slate-50 border border-slate-200 rounded-2xl p-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Riwayat Pasien (cache lokal)</p>
+                      <button
+                        onClick={clearHistory}
+                        className="text-[10px] font-bold text-rose-500 hover:text-rose-700"
+                      >
+                        Hapus Riwayat
+                      </button>
+                    </div>
+                    <div className="space-y-2 max-h-40 overflow-auto">
+                      {history.map(item => (
+                        <button
+                          key={item.id}
+                          onClick={() => loadPatientHistory(item)}
+                          className="w-full text-left px-3 py-2 rounded-xl bg-white border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50 transition-all"
+                        >
+                          <p className="text-xs font-bold text-slate-800">{item.name}</p>
+                          <p className="text-[10px] text-slate-500">
+                            BB {item.inputs.weight || 0} {item.inputs.weightUnit} • {new Date(item.savedAt).toLocaleString('id-ID')}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
               
               <div className="space-y-6">
